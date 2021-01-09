@@ -1,0 +1,17 @@
+package protocol;
+syntax = "proto3";
+
+message Message {
+  enum Type {
+    ERROR = 1;
+    INIT = 2;
+    JOIN = 3;
+    LEAVE = 4;
+    META = 5;
+    SIGNAL = 6;
+    VOXEL = 7;
+  }
+  Type type = 1;
+  bytes buffer = 2;
+  string json = 3;
+}

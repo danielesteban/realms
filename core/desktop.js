@@ -25,11 +25,13 @@ class DesktopControls {
     this.buttons = {
       primary: false,
       secondary: false,
+      tertiary: false,
     };
     this.buttonState = { ...this.buttons };
     this.keyboard = new Vector3(0, 0, 0);
     this.pointer = new Vector2(0, 0);
     this.raycaster = new Raycaster();
+    this.raycaster.far = 32;
     this.renderer = renderer;
     this.xr = xr;
     this.onBlur = this.onBlur.bind(this);
@@ -54,6 +56,7 @@ class DesktopControls {
 
   dispose() {
     const { isLocked, renderer } = this;
+    document.body.classList.remove('pointerlock');
     window.removeEventListener('blur', this.onBlur);
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('keyup', this.onKeyUp);
@@ -113,7 +116,7 @@ class DesktopControls {
           .multiplyScalar(delta * 6)
       );
     }
-    ['primary', 'secondary'].forEach((button) => {
+    ['primary', 'secondary', 'tertiary'].forEach((button) => {
       const state = buttonState[button];
       buttons[`${button}Down`] = state && buttons[button] !== state;
       buttons[`${button}Up`] = !state && buttons[button] !== state;
@@ -126,6 +129,7 @@ class DesktopControls {
     const { buttonState, keyboard } = this;
     buttonState.primary = false;
     buttonState.secondary = false;
+    buttonState.tertiary = false;
     keyboard.set(0, 0, 0);
   }
 
@@ -193,6 +197,9 @@ class DesktopControls {
       case 0:
         buttonState.primary = true;
         break;
+      case 1:
+        buttonState.tertiary = true;
+        break;
       case 2:
         buttonState.secondary = true;
         break;
@@ -218,6 +225,9 @@ class DesktopControls {
       case 0:
         buttonState.primary = false;
         break;
+      case 1:
+        buttonState.tertiary = false;
+        break;
       case 2:
         buttonState.secondary = false;
         break;
@@ -233,6 +243,7 @@ class DesktopControls {
 
   onPointerLock() {
     this.isLocked = !!document.pointerLockElement;
+    document.body.classList[this.isLocked ? 'add' : 'remove']('pointerlock');
     if (!this.isLocked) {
       this.onBlur();
     }

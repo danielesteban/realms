@@ -8,12 +8,39 @@ body {
   font-family: monospace;
 }
 
+button, a.button {
+  box-sizing: border-box;
+  background: #333;
+  color: #fff;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: 0;
+  outline: 0;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.primary, a.button.primary {
+  background: #393;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
 canvas {
   vertical-align: middle;
+  cursor: pointer;
 }
 
 #cursor {
+  display: none;
   opacity: 0.3;
+}
+
+body.pointerlock #cursor {
+  display: block;
 }
 
 #cursor::after {
@@ -28,11 +55,42 @@ canvas {
   border-radius: 8px;
 }
 
+input[type="color"], input[type="email"], input[type="password"], input[type="text"], select {
+  display: inline-block;
+  box-sizing: border-box;
+  vertical-align: middle;
+  border: 1px solid #000;
+  border-radius: 4px;
+  padding: 0.5rem;
+  outline: 0;
+  margin: 0;
+  width: 100%;
+}
+
+input[type="color"] {
+  padding: 0.05rem;
+}
+
+input[type="email"]:disabled, input[type="password"]:disabled, input[type="text"]:disabled, select:disabled {
+  color: #999;
+}
+
+#discord {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
+
+body.pointerlock #discord {
+  display: none;
+}
+
 #info {
   position: absolute;
   bottom: 1rem;
   left: 1rem;
   opacity: 0.3;
+  z-index: 1;
 }
 
 #info > a {
@@ -132,4 +190,24 @@ canvas {
 
 #support.unsupported {
   color: #f33;
+}
+
+.ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 200px;
+  padding: 1rem;
+  background: linear-gradient(to right, rgba(0, 0, 0, .75) , rgba(0, 0, 0, .25));
+}
+
+body.pointerlock .ui {
+  display: none;
+}
+
+@media (max-height: 800px) {
+  .ui {
+    display: none;
+  }
 }

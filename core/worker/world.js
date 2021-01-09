@@ -120,6 +120,18 @@ class World {
     this.floodLight(lightQueues[3], fields.light4);
   }
 
+  pick(x, y, z) {
+    const { fields } = World;
+    const { voxels } = this;
+    const voxel = this.getVoxel(x, y, z);
+    return {
+      type: voxels[voxel],
+      r: voxels[voxel + fields.r],
+      g: voxels[voxel + fields.g],
+      b: voxels[voxel + fields.b],
+    };
+  }
+
   update(
     x,
     y,

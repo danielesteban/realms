@@ -2,6 +2,7 @@ import {
   BoxBufferGeometry,
   BufferGeometryUtils,
   BufferAttribute,
+  Color,
   DynamicDrawUsage,
   Frustum,
   InstancedBufferGeometry,
@@ -19,13 +20,34 @@ class Voxels extends Mesh {
   static setupMaterial() {
     const { uniforms, vertexShader, fragmentShader } = ShaderLib.basic;
     Voxels.material = new ShaderMaterial({
-      uniforms: UniformsUtils.clone(uniforms),
+      uniforms: {
+        ...UniformsUtils.clone(uniforms),
+        ambientLight: { value: new Color() },
+        lightChannel1: { value: new Color() },
+        lightChannel2: { value: new Color() },
+        lightChannel3: { value: new Color() },
+        lightChannel4: { value: new Color() },
+      },
       vertexShader: vertexShader
         .replace(
           '#include <common>',
           [
             '#include <common>',
+            'attribute vec4 lighting;',
             'attribute vec3 offset;',
+            'uniform vec3 ambientLight;',
+            'uniform vec3 lightChannel1;',
+            'uniform vec3 lightChannel2;',
+            'uniform vec3 lightChannel3;',
+            'uniform vec3 lightChannel4;',
+          ].join('\n')
+        )
+        .replace(
+          '#include <color_vertex>',
+          [
+            '#include <color_vertex>',
+            'vColor.xyz /= 255.0;',
+            'vColor.xyz *= max( ambientLight, pow(lighting.x / 255.0, 2.0) * lightChannel1 + pow((lighting.y / 255.0), 2.0) * lightChannel2 + pow((lighting.z / 255.0), 2.0) * lightChannel3 + pow((lighting.w / 255.0), 2.0) * lightChannel4 );',
           ].join('\n')
         )
         .replace(
@@ -48,14 +70,15 @@ class Voxels extends Mesh {
     renderRadius,
   }) {
     const { scale } = Voxels;
-    const intersects = Array(((intersectRadius * 2 + 1) ** 3));
-    const spheres = Array(((renderRadius * 2 + 1) ** 3));
+    const intersects = [];
+    const spheres = [];
     const center = new Vector3(width * 0.5 * scale, height * 0.5 * scale, depth * 0.5 * scale);
     const radius = center.length();
+    const vector = new Vector3();
     for (let z = -renderRadius, i = 0, j = 0; z <= renderRadius; z += 1) {
       for (let y = -renderRadius; y <= renderRadius; y += 1) {
-        for (let x = -renderRadius; x <= renderRadius; x += 1, i += 1) {
-          if ((new Vector3(x, y, z)).length() > renderRadius) {
+        for (let x = -renderRadius; x <= renderRadius; x += 1) {
+          if (vector.set(x, y, z).length() >= renderRadius) {
             // eslint-disable-next-line no-continue
             continue;
           }
@@ -63,6 +86,7 @@ class Voxels extends Mesh {
           const sphere = new Sphere(offset.clone().add(center), radius);
           sphere.offset = offset;
           spheres[i] = sphere;
+          i += 1;
           if (
             x >= -intersectRadius && x <= intersectRadius
             && y >= -intersectRadius && y <= intersectRadius
@@ -82,6 +106,24 @@ class Voxels extends Mesh {
     Voxels.offsets = new InstancedBufferAttribute(new Float32Array(spheres.length * 3), 3);
     Voxels.offsets.setUsage(DynamicDrawUsage);
     Voxels.spheres = spheres;
+  }
+
+  static updateLighting({
+    ambient,
+    light1,
+    light2,
+    light3,
+    light4,
+  }) {
+    if (!Voxels.material) {
+      Voxels.setupMaterial();
+    }
+    const { material: { uniforms } } = Voxels;
+    if (ambient) uniforms.ambientLight.value.copy(ambient);
+    if (light1) uniforms.lightChannel1.value.copy(light1);
+    if (light2) uniforms.lightChannel2.value.copy(light2);
+    if (light3) uniforms.lightChannel3.value.copy(light3);
+    if (light4) uniforms.lightChannel4.value.copy(light4);
   }
 
   static updateIntersects(boxes) {
@@ -140,6 +182,7 @@ class Voxels extends Mesh {
 
   update({
     color,
+    lighting,
     position,
     index,
   }) {
@@ -149,9 +192,9 @@ class Voxels extends Mesh {
     }
     const { geometry } = this;
     geometry.setAttribute('color', new BufferAttribute(color, 3));
+    geometry.setAttribute('lighting', new BufferAttribute(lighting, 4));
     geometry.setAttribute('position', new BufferAttribute(position, 3));
     geometry.setIndex(new BufferAttribute(index, 1));
-    geometry.computeBoundingSphere();
     this.visible = true;
   }
 }
@@ -161,6 +204,7 @@ Voxels.aux = {
   matrix: new Matrix4(),
   vector: new Vector3(),
 };
-Voxels.scale = 0.25;
+
+Voxels.scale = 0.5;
 
 export default Voxels;

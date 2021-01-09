@@ -9,11 +9,10 @@ import {
 import Scene from './scene.js';
 
 class Renderer {
-  constructor({ dom, worlds }) {
+  constructor({ dom, server, worlds }) {
     // Initialize state
     this.clock = new Clock();
     this.clock.localStartTime = Date.now();
-    this.clock.serverTimeOffset = 0;
     this.fps = {
       count: 0,
       lastTick: this.clock.oldTime / 1000,
@@ -41,7 +40,7 @@ class Renderer {
     this.onResize();
 
     // Setup scene
-    this.scene = new Scene({ renderer: this, worlds });
+    this.scene = new Scene({ renderer: this, server, worlds });
 
     // Setup VR
     if (navigator.xr) {
@@ -55,9 +54,7 @@ class Renderer {
           .then((session) => {
             xr.setSession(session);
             dom.enterVR.style.display = 'none';
-            if (this.scene) {
-              this.scene.resumeAudio();
-            }
+            this.scene.resumeAudio();
             session.addEventListener('end', () => {
               xr.setSession(null);
               dom.enterVR.style.display = '';
@@ -69,9 +66,8 @@ class Renderer {
       dom.support.innerText = 'webxr is supported';
       navigator.xr.isSessionSupported('immersive-vr')
         .then((supported) => {
-          dom.enterVR.style.display = '';
-          if (!supported) {
-            dom.enterVR.innerText = 'VR NOT SUPPORTED';
+          if (supported) {
+            dom.enterVR.style.display = '';
           }
         });
     } else {
@@ -93,22 +89,19 @@ class Renderer {
     const animation = {
       delta: Math.min(clock.getDelta(), 1 / 30),
       time: clock.oldTime / 1000,
-      serverTime: ((clock.localStartTime + clock.serverTimeOffset) / 1000) + clock.elapsedTime,
     };
 
     // Render scene
-    if (scene) {
-      scene.player.updateMatrixWorld();
-      scene.onAnimationTick({
-        animation,
-        camera: renderer.xr.enabled && renderer.xr.isPresenting ? (
-          renderer.xr.getCamera(camera)
-        ) : (
-          camera
-        ),
-      });
-      renderer.render(scene, camera);
-    }
+    scene.player.updateMatrixWorld();
+    scene.onAnimationTick({
+      animation,
+      camera: renderer.xr.enabled && renderer.xr.isPresenting ? (
+        renderer.xr.getCamera(camera)
+      ) : (
+        camera
+      ),
+    });
+    renderer.render(scene, camera);
 
     // Output debug info
     fps.count += 1;

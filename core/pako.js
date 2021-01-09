@@ -1,0 +1,3 @@
+import 'https://cdn.jsdelivr.net/npm/pako@2.0.2/dist/pako_inflate.min.js';
+
+export default window.pako;

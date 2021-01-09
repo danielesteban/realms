@@ -9,10 +9,9 @@ import {
   Raycaster,
   Vector3,
 } from './three.js';
-import CurveCast from './curvecast.js';
 import DesktopControls from './desktop.js';
 import Hand from '../renderables/hand.js';
-import Marker from '../renderables/marker.js';
+import Head from '../renderables/head.js';
 import Pointer from '../renderables/pointer.js';
 
 // Player controller
@@ -28,7 +27,6 @@ class Player extends Group {
     this.auxMatrixA = new Matrix4();
     this.auxMatrixB = new Matrix4();
     this.auxVector = new Vector3();
-    this.auxDestination = new Vector3();
     this.attachments = { left: [], right: [] };
     this.climbing = {
       bodyScale: 1,
@@ -51,7 +49,6 @@ class Player extends Group {
         this.isOnAir = false;
       },
     };
-    this.direction = new Vector3();
     this.head = new AudioListener();
     this.head.rotation.order = 'YXZ';
     const physicsMaterial = new MeshBasicMaterial({ visible: false });
@@ -78,7 +75,6 @@ class Player extends Group {
         primary: false,
         secondary: false,
       };
-      controller.marker = new Marker();
       controller.physics = controllerPhysics.clone();
       controller.pointer = new Pointer();
       controller.add(controller.pointer);
@@ -93,7 +89,7 @@ class Player extends Group {
         controller.gamepad.hapticActuators[0].pulse(intensity, duration);
       };
       controller.raycaster = new Raycaster();
-      controller.raycaster.far = 8;
+      controller.raycaster.far = 16;
       controller.worldspace = {
         lastPosition: new Vector3(),
         movement: new Vector3(),
@@ -130,12 +126,24 @@ class Player extends Group {
         controller.remove(controller.physics);
         delete controller.hand;
         delete controller.gamepad;
-        controller.marker.visible = false;
         controller.pointer.visible = false;
       });
       return controller;
     });
-    this.desktopControls = new DesktopControls({ renderer: dom.renderer, xr });
+    this.desktopControls = new DesktopControls({
+      cursor: dom.cursor,
+      renderer: dom.renderer,
+      xr,
+    });
+    {
+      const key = 'realmsvr::skin';
+      let skin = localStorage.getItem(key);
+      if (!skin) {
+        skin = Head.generateTexture().toDataURL();
+        localStorage.setItem(key, skin);
+      }
+      this.skin = skin;
+    }
     this.xr = xr;
   }
 
@@ -169,18 +177,13 @@ class Player extends Group {
     animation,
     camera,
     pointables,
-    translocables,
   }) {
     const {
       auxMatrixA: rotation,
       auxVector: vector,
       controllers,
       desktopControls,
-      destination,
-      direction,
       head,
-      position,
-      speed,
       xr,
     } = this;
 
@@ -191,7 +194,6 @@ class Player extends Group {
       buttons,
       hand,
       gamepad,
-      marker,
       matrixWorld,
       pointer,
       raycaster,
@@ -200,7 +202,6 @@ class Player extends Group {
       if (!hand) {
         return;
       }
-      marker.visible = false;
       pointer.visible = false;
       [
         ['forwards', gamepad.axes[3] <= -0.5],
@@ -234,45 +235,27 @@ class Player extends Group {
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation);
     });
 
-    // Animate translocation
-    if (destination) {
-      let step = speed * animation.delta;
-      const distance = destination.distanceTo(position);
-      if (distance <= step) {
-        delete this.destination;
-        step = distance;
-      }
-      vector.copy(direction).multiplyScalar(step);
-      position.add(vector);
-      head.position.add(vector);
-      controllers.forEach(({ hand, raycaster, worldspace }) => {
-        if (hand) {
-          raycaster.ray.origin.add(vector);
-          worldspace.position.add(vector);
-        }
-      });
-    }
-
     // Process input
     controllers.forEach(({
       hand,
       buttons: {
+        backwards,
         forwards,
-        forwardsUp,
+        leftwards,
         leftwardsDown,
+        rightwards,
         rightwardsDown,
         secondaryDown,
       },
-      marker,
       pointer,
       raycaster,
+      worldspace,
     }) => {
       if (!hand) {
         return;
       }
       if (
-        !this.destination
-        && hand.handedness === 'left'
+        hand.handedness === 'left'
         && (leftwardsDown || rightwardsDown)
       ) {
         this.rotate(
@@ -280,32 +263,38 @@ class Player extends Group {
         );
       }
       if (
-        !this.destination
-        && hand.handedness === 'right'
-        && (forwards || forwardsUp)
+        hand.handedness === 'right'
+        && (backwards || forwards || leftwards || rightwards)
       ) {
-        const { hit, points } = CurveCast({
-          intersects: translocables.flat(),
-          raycaster,
-        });
-        if (hit) {
-          if (forwardsUp) {
-            this.translocate(hit.point);
-          } else {
-            marker.update({ animation, hit, points });
-          }
+        vector.set(0, 0, 0);
+        if (backwards) {
+          vector.z = 1;
         }
+        if (forwards) {
+          vector.z = -1;
+        }
+        if (leftwards) {
+          vector.x = -1;
+        }
+        if (rightwards) {
+          vector.x = 1;
+        }
+        this.move(
+          vector
+            .normalize()
+            .applyQuaternion(worldspace.quaternion)
+            .multiplyScalar(animation.delta * 4)
+        );
       }
       if (
-        !this.destination
-        && secondaryDown
+        secondaryDown
         && xr.enabled
         && xr.isPresenting
       ) {
         xr.getSession().end();
       }
       if (pointables.length) {
-        const hit = raycaster.intersectObjects(pointables.flat())[0] || false;
+        const hit = raycaster.intersectObjects(pointables)[0] || false;
         if (hit) {
           pointer.update({
             distance: hit.distance,
@@ -328,7 +317,7 @@ class Player extends Group {
         worldspace.position.add(offset);
       }
     });
-    delete this.destination;
+    this.updateMatrixWorld();
   }
 
   rotate(radians) {
@@ -358,6 +347,7 @@ class Player extends Group {
         worldspace.position.applyMatrix4(transform);
       }
     });
+    this.updateMatrixWorld();
   }
 
   teleport(point) {
@@ -374,28 +364,7 @@ class Player extends Group {
       point.y + headY,
       point.z
     );
-    delete this.destination;
-  }
-
-  translocate(point) {
-    const {
-      auxDestination: destination,
-      direction,
-      head,
-      position,
-    } = this;
-    destination
-      .subVectors(point, destination.set(
-        head.position.x - position.x,
-        0,
-        head.position.z - position.z
-      ));
-    this.destination = destination;
-    this.speed = Math.max(destination.distanceTo(position) / 0.2, 2);
-    direction
-      .copy(destination)
-      .sub(position)
-      .normalize();
+    this.updateMatrixWorld();
   }
 }
 

@@ -13,6 +13,7 @@ class Scene extends ThreeScene {
       dom,
       renderer,
     },
+    server,
     worlds,
   }) {
     super();
@@ -20,17 +21,12 @@ class Scene extends ThreeScene {
     this.clock = clock;
 
     this.player = new Player({ camera, dom, xr: renderer.xr });
-    this.player.controllers.forEach(({ marker }) => (
-      this.add(marker)
-    ));
     this.add(this.player);
 
     this.ambient = new Ambient(this.player.head.context.state === 'running');
     this.sfx = new SFX({ listener: this.player.head });
-
     this.pointables = [];
-    this.translocables = [];
-
+    this.server = server;
     this.worlds = worlds;
 
     const onFirstInteraction = () => {
@@ -45,7 +41,6 @@ class Scene extends ThreeScene {
       ambient,
       player,
       pointables,
-      translocables,
       worlds,
     } = this;
     if (this.world) {
@@ -59,7 +54,6 @@ class Scene extends ThreeScene {
     ambient.set(null);
     player.detachAll();
     pointables.length = 0;
-    translocables.length = 0;
     this.world = new worlds[world](this, options);
     if (this.world.resumeAudio && player.head.context.state === 'running') {
       this.world.resumeAudio();
@@ -72,7 +66,6 @@ class Scene extends ThreeScene {
       ambient,
       player,
       pointables,
-      translocables,
       world,
     } = this;
     ambient.onAnimationTick(animation);
@@ -80,7 +73,6 @@ class Scene extends ThreeScene {
       animation,
       camera,
       pointables,
-      translocables,
     });
     if (world && world.onAnimationTick) {
       world.onAnimationTick({ animation, camera });
@@ -96,26 +88,6 @@ class Scene extends ThreeScene {
     if (world && world.resumeAudio) {
       world.resumeAudio();
     }
-  }
-
-  syncTimeOffset(server) {
-    const { clock } = this;
-    const fetchTimeOffset = (deltas = []) => (
-      fetch(`${server}sync`)
-        .then((res) => res.text())
-        .then((server) => {
-          const client = Date.now();
-          deltas.push(parseInt(server, 10) - client);
-          if (deltas.length < 10) {
-            return fetchTimeOffset(deltas);
-          }
-          return deltas.reduce((sum, delta) => (sum + delta), 0) / deltas.length;
-        })
-    );
-    fetchTimeOffset()
-      .then((offset) => {
-        clock.serverTimeOffset = offset;
-      });
   }
 }
 

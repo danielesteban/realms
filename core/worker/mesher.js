@@ -1,23 +1,3 @@
-function GetLightColor(l1, l2, l3, l4, ao, lightChannels) {
-  const color = ['r', 'g', 'b'].reduce((color, key) => {
-    color[key] = Math.max(
-      Math.min(
-        (
-          l1 ** 2 * lightChannels.light1[key]
-          + l2 ** 2 * lightChannels.light2[key]
-          + l3 ** 2 * lightChannels.light3[key]
-          + l4 ** 2 * lightChannels.light4[key]
-        ),
-        1
-      ),
-      lightChannels.ambient[key]
-    ) * ao;
-    return color;
-  }, {});
-  color.avg = (color.r + color.g + color.b) / 3;
-  return color;
-}
-
 function GetLighting(
   {
     light1,
@@ -26,7 +6,6 @@ function GetLighting(
     light4,
   },
   neighbors,
-  lightChannels,
   maxLight
 ) {
   return neighbors.map((neighbors) => {
@@ -57,7 +36,14 @@ function GetLighting(
     l2 = l2 / c / maxLight;
     l3 = l3 / c / maxLight;
     l4 = l4 / c / maxLight;
-    return GetLightColor(l1, l2, l3, l4, ao, lightChannels);
+    return {
+      avg: Math.min(l1 + l2 + l3 + l4, 1) * ao,
+      ao,
+      l1,
+      l2,
+      l3,
+      l4,
+    };
   });
 }
 
@@ -75,11 +61,19 @@ function PushFace(
     lighting.unshift(lighting.pop());
     vertices.unshift(vertices.pop());
   }
-  lighting.forEach((light) => geometry.color.push(
-    (color.r / 0xFF) * light.r,
-    (color.g / 0xFF) * light.g,
-    (color.b / 0xFF) * light.b
-  ));
+  lighting.forEach((light) => {
+    geometry.color.push(
+      Math.floor(color.r * light.ao),
+      Math.floor(color.g * light.ao),
+      Math.floor(color.b * light.ao)
+    );
+    geometry.lighting.push(
+      Math.floor(light.l1 * 0xFF),
+      Math.floor(light.l2 * 0xFF),
+      Math.floor(light.l3 * 0xFF),
+      Math.floor(light.l4 * 0xFF)
+    );
+  });
   vertices.forEach((vertex) => geometry.position.push(...vertex));
   [0, 1, 2, 2, 3, 0].forEach((i) => geometry.index.push(geometry.offset + i));
   geometry.offset += 4;
@@ -88,7 +82,7 @@ function PushFace(
 function MeshVoxel(x, y, z, world, geometry) {
   const { fields } = world.constructor;
   const { config, voxels } = world;
-  const { lightChannels, maxLight } = config;
+  const { maxLight } = config;
   const get = (vx, vy, vz) => {
     const voxel = world.getVoxel(x + vx, y + vy, z + vz);
     return {
@@ -130,7 +124,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [te, tn, get(1, 1, -1)],
           [tw, tn, get(-1, 1, -1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -155,7 +148,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [be, bs, get(1, -1, 1)],
           [bw, bs, get(-1, -1, 1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -180,7 +172,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [se, st, get(1, 1, 1)],
           [sw, st, get(-1, 1, 1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -205,7 +196,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [nw, nt, get(-1, 1, -1)],
           [ne, nt, get(1, 1, -1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -230,7 +220,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [en, et, get(1, 1, -1)],
           [es, et, get(1, 1, 1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -255,7 +244,6 @@ function MeshVoxel(x, y, z, world, geometry) {
           [ws, wt, get(-1, 1, 1)],
           [wn, wt, get(-1, 1, -1)],
         ],
-        lightChannels,
         maxLight
       ),
       geometry
@@ -269,6 +257,7 @@ function MeshChunk(cx, cy, cz, world) {
   const geometry = {
     color: [],
     index: [],
+    lighting: [],
     position: [],
     offset: 0,
   };
@@ -288,14 +277,20 @@ function MeshChunk(cx, cy, cz, world) {
       }
     }
   }
-  const buffers = {
-    color: new Float32Array(geometry.color),
-    position: new Uint8Array(geometry.position),
+  const views = {
+    color: new Uint8Array(geometry.color),
     index: new Uint16Array(geometry.index),
+    lighting: new Uint8Array(geometry.lighting),
+    position: new Uint8Array(geometry.position),
   };
   return {
-    buffers: [buffers.color.buffer, buffers.position.buffer, buffers.index.buffer],
-    geometry: buffers,
+    buffers: [
+      views.color.buffer,
+      views.index.buffer,
+      views.lighting.buffer,
+      views.position.buffer,
+    ],
+    geometry: views,
   };
 }
 
