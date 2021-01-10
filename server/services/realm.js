@@ -14,8 +14,10 @@ module.exports.onClient = (client, req) => {
   );
   let { slug } = req.params;
   slug = `${slug}`;
-  (!rooms.has(slug) ? (
-    Realm
+
+  let room = rooms.get(slug);
+  if (!room) {
+    room = Realm
       .findOne({ slug })
       .select('creator name width height depth ambient background light1 light2 light3 light4 views voxels')
       .populate('creator', 'name')
@@ -31,10 +33,10 @@ module.exports.onClient = (client, req) => {
         });
         rooms.set(slug, room);
         return room;
-      })
-  ) : (
-    Promise.resolve(rooms.get(slug))
-  ))
+      });
+    rooms.set(slug, room);
+  }
+  (room instanceof Promise ? room : Promise.resolve(room))
     .then((room) => (
       room.onClient(client)
     ))

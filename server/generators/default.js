@@ -1,22 +1,24 @@
-module.exports = ({ width, height, depth }) => {
+module.exports = ({ width, depth }) => {
   const center = { x: width * 0.5, z: depth * 0.5 };
   return ({ x, y, z }) => {
-    const r = Math.sqrt((x - center.x) ** 2 + (z - center.z) ** 2);
-    if (r < 24 && y < height - 8) {
-      let type = 0x01;
-      if (y === 6) {
-        type = z === center.z && r > 9 && r < 11 ? (x > center.x ? 0x02 : 0x03) : 0;
-      } else if (y > 8) {
-        type = r > 23.5 ? 0x01 : 0x00;
-      } else if (y > 2) {
-        return false;
+    // Platform
+    if (
+      y === 0
+      && x >= center.x - 3
+      && x <= center.x + 2
+      && z >= center.z - 3
+      && z <= center.z + 2
+    ) {
+      if (
+        x >= center.x - 1
+        && x <= center.x
+        && z >= center.z - 1
+        && z <= center.z
+      ) {
+        return [0x02, 0xBF, 0xBF, 0xBF];
       }
-      return [
-        type,
-        0xBB - Math.random() * 0x22,
-        0xBB - Math.random() * 0x22,
-        0xBB - Math.random() * 0x22,
-      ];
+      const intensity = 0xAA - Math.floor(Math.random() * 16);
+      return [0x01, intensity, intensity, intensity];
     }
     return false;
   };

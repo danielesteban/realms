@@ -112,7 +112,18 @@ class RealmRoom extends Room {
             ...(light4 ? { light4 } : {}),
           },
         }, { exclude: client.id });
-        realm.save().catch(Room.noop);
+        realm.save()
+          .then((realm) => {
+            if (name) {
+              this.broadcast({
+                type: 'META',
+                json: {
+                  slug: realm.slug,
+                },
+              });
+            }
+          })
+          .catch(Room.noop);
         break;
       }
       case 'VOXEL': {

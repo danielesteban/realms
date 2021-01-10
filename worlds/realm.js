@@ -227,7 +227,7 @@ class Realm extends Group {
       this.player.teleport(
         new Vector3(
           this.config.width * Voxels.scale * 0.5,
-          1.5,
+          0.5,
           this.config.depth * Voxels.scale * 0.5
         )
       );
@@ -259,6 +259,10 @@ class Realm extends Group {
         router.replace('/');
         break;
       case 'META':
+        if (json.slug) {
+          router.replace(`/${json.slug}`);
+          return;
+        }
         this.ui.update(json, true);
         break;
       case 'VOXEL':
