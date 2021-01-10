@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const URLSlugs = require('mongoose-url-slugs');
-// const config = require('../config');
 const Generators = require('../generators');
-// const Screenshots = require('../screenshots');
+const Screenshots = require('../services/screenshots');
 
 const RealmSchema = new mongoose.Schema({
   creator: {
@@ -46,18 +45,24 @@ RealmSchema.pre('save', function onSave(next) {
 
 RealmSchema.post('save', function onSaved() {
   const realm = this;
-  if (realm.needsScreeenshot) {
+  if (
+    realm.needsScreeenshot
+    && realm.isSelected('ambient')
+    && realm.isSelected('background')
+    && realm.isSelected('light1')
+    && realm.isSelected('light2')
+    && realm.isSelected('light3')
+    && realm.isSelected('light4')
+    && realm.isSelected('voxels')
+  ) {
     realm.updateScreenshot();
   }
 });
 
 RealmSchema.methods = {
   updateScreenshot() {
-    // const realm = this;
-    // return Screenshots.update({
-    //   model: realm,
-    //   url: `${config.clientOrigin}/${realm.slug}`,
-    // });
+    const realm = this;
+    return Screenshots.update(realm);
   },
 };
 

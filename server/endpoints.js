@@ -21,31 +21,31 @@ module.exports = (api) => {
     realm.create
   );
 
-  // api.get(
-  //   '/realm/:id/screenshot',
-  //   realm.getScreenshot
-  // );
+  api.get(
+    '/realm/:id/screenshot',
+    realm.getScreenshot
+  );
 
   // Listings
 
-  // api.get(
-  //   '/realms/latest/:page',
-  //   preventCache,
-  //   realm.list('latest')
-  // );
+  api.get(
+    '/realms/latest/:page',
+    preventCache,
+    realm.list('latest')
+  );
 
-  // api.get(
-  //   '/realms/popular/:page',
-  //   preventCache,
-  //   realm.list('popular')
-  // );
+  api.get(
+    '/realms/popular/:page',
+    preventCache,
+    realm.list('popular')
+  );
 
-  // api.get(
-  //   '/realms/user/:page',
-  //   preventCache,
-  //   requireAuth,
-  //   realm.list('user')
-  // );
+  api.get(
+    '/realms/user/:page',
+    preventCache,
+    requireAuth,
+    realm.list('user')
+  );
 
   // User
 

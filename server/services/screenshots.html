@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script type="module">
+      import {
+        ACESFilmicToneMapping,
+        Color,
+        FogExp2,
+        PerspectiveCamera,
+        Scene,
+        sRGBEncoding,
+        WebGLRenderer,
+      } from '__CLIENT__/core/three.js';
+      import Voxels from '__CLIENT__/renderables/voxels.js';
+
+      const renderer = new WebGLRenderer({
+        canvas: document.getElementById('canvas'),
+        antialias: true,
+        stencil: false,
+      });
+      renderer.outputEncoding = sRGBEncoding;
+      renderer.toneMapping = ACESFilmicToneMapping;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const meta = __META__;
+      const config = {
+        width: meta.width,
+        height: meta.height,
+        depth: meta.depth,
+        maxLight: 16,
+        chunkSize: 32,
+        renderRadius: 4,
+      };
+
+      const camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 512);
+      camera.position.set(
+        config.width * Voxels.scale * 0.5,
+        3.1,
+        config.depth * Voxels.scale * 0.5
+      );
+
+      const scene = new Scene();
+      scene.background = (new Color()).setHex(meta.background);
+      scene.fog = new FogExp2(scene.background.clone(), 0.01);
+
+      Voxels.setupOffsets(config);
+      Voxels.updateOffsets(camera);
+      Voxels.updateLighting(meta);
+
+      const worker = new Worker('__CLIENT__/core/worker/main.js', { type: 'module' });
+      worker.addEventListener('message', ({ data: { chunks } }) => {
+        chunks.forEach((geometry, chunk) => {
+          const voxels = new Voxels();
+          scene.add(voxels);
+          voxels.update(geometry);
+          voxels.geometry.instanceCount = Voxels.offsets.visible;
+        });
+        renderer.render(scene, camera);
+        worker.terminate();
+        window.__READY__ = true;
+      });
+      worker.postMessage({
+        type: 'init',
+        config,
+      });
+      worker.postMessage({
+        type: 'load',
+        data: new Uint8Array(__VOXELS__),
+      });
+    </script>
+  </body>
+</html>
