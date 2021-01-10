@@ -14,36 +14,12 @@ const RealmSchema = new mongoose.Schema({
   width: { type: Number, required: true },
   height: { type: Number, required: true },
   depth: { type: Number, required: true },
-  ambient: {
-    r: { type: Number, default: 0.02 },
-    g: { type: Number, default: 0.02 },
-    b: { type: Number, default: 0.02 },
-  },
-  background: {
-    r: { type: Number, default: 0.05 },
-    g: { type: Number, default: 0.05 },
-    b: { type: Number, default: 0.05 },
-  },
-  light1: {
-    r: { type: Number, default: 0.75 },
-    g: { type: Number, default: 0.75 },
-    b: { type: Number, default: 0.75 },
-  },
-  light2: {
-    r: { type: Number, default: 0.5 },
-    g: { type: Number, default: 0.5 },
-    b: { type: Number, default: 0.5 },
-  },
-  light3: {
-    r: { type: Number, default: 0.25 },
-    g: { type: Number, default: 0.25 },
-    b: { type: Number, default: 0.25 },
-  },
-  light4: {
-    r: { type: Number, default: 0.125 },
-    g: { type: Number, default: 0.125 },
-    b: { type: Number, default: 0.125 },
-  },
+  ambient: { type: Number, default: 0x050505 },
+  background: { type: Number, default: 0x0c0c0c },
+  light1: { type: Number, default: 0xbfbfbf },
+  light2: { type: Number, default: 0x7f7f7f },
+  light3: { type: Number, default: 0x3f3f3f },
+  light4: { type: Number, default: 0x1f1f1f },
   screenshot: Buffer,
   views: {
     type: Number,

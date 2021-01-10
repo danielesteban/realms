@@ -26,6 +26,7 @@ class Realm extends Group {
 
     this.player = scene.player;
     this.pointables = scene.pointables;
+    this.router = scene.router;
     this.peers = new Peers({
       onInit: this.onInit.bind(this),
       onServerEvent: this.onServerEvent.bind(this),
@@ -36,8 +37,19 @@ class Realm extends Group {
     this.add(this.peers);
 
     this.ui = new UI({});
-    this.ui.addEventListener('button', () => {
-      alert('coming soon!');
+    this.ui.addEventListener('button', ({ id }) => {
+      switch (id) {
+        case 'create':
+        case 'fork':
+          if (scene.server.session) {
+            alert('coming soon!');
+          } else {
+            scene.server.showDialog('session');
+          }
+          break;
+        default:
+          break;
+      }
     });
     this.ui.addEventListener('change', ({ id, value }) => {
       if (id !== 'brush') {
@@ -49,10 +61,10 @@ class Realm extends Group {
     });
     this.ui.addEventListener('input', ({ id, value }) => {
       if (id === 'background') {
-        scene.background.copy(value);
-        scene.fog.color.copy(value);
+        scene.background.setHex(value);
+        scene.fog.color.setHex(value);
       } if (id === 'brush') {
-        this.brush.color.copy(value);
+        this.brush.color.setHex(value);
       } else if (
         ['ambient', 'light1', 'light2', 'light3', 'light4'].includes(id)
       ) {
@@ -135,26 +147,20 @@ class Realm extends Group {
             });
           } else {
             let type = 0;
-            let color = {
-              r: brush.color.r,
-              g: brush.color.g,
-              b: brush.color.b,
+            const color = {
+              r: Math.floor(brush.color.r * 0xFF),
+              g: Math.floor(brush.color.g * 0xFF),
+              b: Math.floor(brush.color.b * 0xFF),
             };
             if (isPlacing) {
               // TODO: move this out of desktop controls with events
               type = player.desktopControls.brush.type + 1;
               if (type > 1) {
-                color = {
-                  r: 0.75,
-                  g: 0.75,
-                  b: 0.75,
-                };
+                color.r = 0xBF;
+                color.g = 0xBF;
+                color.b = 0xBF;
               }
             }
-            color.r = Math.floor(color.r * 0xFF);
-            color.g = Math.floor(color.g * 0xFF);
-            color.b = Math.floor(color.b * 0xFF);
-
             // TODO: get a scalar from the ui for this
             const noise = ((color.r + color.g + color.b) / 3) * 0.15;
 
@@ -237,11 +243,19 @@ class Realm extends Group {
     });
   }
 
+  onSession() {
+    const { peers } = this;
+    // Force reload when session changes
+    if (peers.socket) {
+      peers.socket.close();
+    }
+  }
+
   onServerEvent({ type, json }) {
-    const { worker } = this;
+    const { router, worker } = this;
     switch (type) {
       case 'ERROR':
-        // renderer.scene.load('Menu');
+        router.replace('/');
         break;
       case 'META':
         this.ui.update(json, true);
@@ -261,7 +275,9 @@ class Realm extends Group {
     switch (message.type) {
       case 'pick': {
         const { type, r, g, b } = message.voxel;
-        this.brush.color.setRGB(r / 0xFF, g / 0xFF, b / 0xFF);
+        this.brush.color.setHex(
+          r << 16 ^ g << 8 ^ b << 0
+        );
         // TODO: move this out of desktop controls with events
         this.player.desktopControls.brush.type = type - 1;
         break;

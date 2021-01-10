@@ -41,19 +41,15 @@ class RealmRoom extends Room {
     };
   }
 
-  static sanitizeColor(input) {
-    if (!input) {
+  static sanitizeLight(color) {
+    if (color === undefined) {
       return false;
     }
-    const color = {
-      r: parseFloat(`${input.r}`),
-      g: parseFloat(`${input.g}`),
-      b: parseFloat(`${input.b}`),
-    };
+    color = parseInt(`${color}`, 10);
     if (
-      Number.isNaN(color.r)
-      || Number.isNaN(color.g)
-      || Number.isNaN(color.b)
+      Number.isNaN(color)
+      || color < 0
+      || color > 0xffffff
     ) {
       return false;
     }
@@ -63,7 +59,7 @@ class RealmRoom extends Room {
   onRequest(client, request) {
     super.onRequest(client, request);
     const { realm } = this;
-    const { sanitizeColor } = RealmRoom;
+    const { sanitizeLight } = RealmRoom;
     switch (request.type) {
       case 'META': {
         // if (!client.isCreator) {
@@ -79,24 +75,30 @@ class RealmRoom extends Room {
           light4,
         } = request.json || {};
         name = `${name || ''}`;
-        background = sanitizeColor(background);
-        ambient = sanitizeColor(ambient);
-        light1 = sanitizeColor(light1);
-        light2 = sanitizeColor(light2);
-        light3 = sanitizeColor(light3);
-        light4 = sanitizeColor(light4);
+        background = sanitizeLight(background);
+        ambient = sanitizeLight(ambient);
+        light1 = sanitizeLight(light1);
+        light2 = sanitizeLight(light2);
+        light3 = sanitizeLight(light3);
+        light4 = sanitizeLight(light4);
         if (
-          !name && !background && !ambient && !light1 && !light2 && !light3 && !light4
+          !name
+          && background === false
+          && ambient === false
+          && light1 === false
+          && light2 === false
+          && light3 === false
+          && light4 === false
         ) {
           return;
         }
         if (name) realm.name = name;
-        if (background) realm.background = background;
-        if (ambient) realm.ambient = ambient;
-        if (light1) realm.light1 = light1;
-        if (light2) realm.light2 = light2;
-        if (light3) realm.light3 = light3;
-        if (light4) realm.light4 = light4;
+        if (background !== false) realm.background = background;
+        if (ambient !== false) realm.ambient = ambient;
+        if (light1 !== false) realm.light1 = light1;
+        if (light2 !== false) realm.light2 = light2;
+        if (light3 !== false) realm.light3 = light3;
+        if (light4 !== false) realm.light4 = light4;
         this.broadcast({
           type: 'META',
           json: {

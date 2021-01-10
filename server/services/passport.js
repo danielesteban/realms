@@ -93,7 +93,7 @@ module.exports.setup = () => {
     session: false,
   }, (email, password, done) => (
     User
-      .findOne({ email })
+      .findOne({ email, password: { $exists: true } })
       .then((user) => {
         if (!user) {
           return done(null, false);

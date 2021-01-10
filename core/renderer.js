@@ -9,7 +9,12 @@ import {
 import Scene from './scene.js';
 
 class Renderer {
-  constructor({ dom, server, worlds }) {
+  constructor({
+    dom,
+    router,
+    server,
+    worlds,
+  }) {
     // Initialize state
     this.clock = new Clock();
     this.clock.localStartTime = Date.now();
@@ -40,7 +45,12 @@ class Renderer {
     this.onResize();
 
     // Setup scene
-    this.scene = new Scene({ renderer: this, server, worlds });
+    this.scene = new Scene({
+      renderer: this,
+      router,
+      server,
+      worlds,
+    });
 
     // Setup VR
     if (navigator.xr) {

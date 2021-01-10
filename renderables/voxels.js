@@ -119,11 +119,11 @@ class Voxels extends Mesh {
       Voxels.setupMaterial();
     }
     const { material: { uniforms } } = Voxels;
-    if (ambient) uniforms.ambientLight.value.copy(ambient);
-    if (light1) uniforms.lightChannel1.value.copy(light1);
-    if (light2) uniforms.lightChannel2.value.copy(light2);
-    if (light3) uniforms.lightChannel3.value.copy(light3);
-    if (light4) uniforms.lightChannel4.value.copy(light4);
+    if (ambient !== undefined) uniforms.ambientLight.value.setHex(ambient);
+    if (light1 !== undefined) uniforms.lightChannel1.value.setHex(light1);
+    if (light2 !== undefined) uniforms.lightChannel2.value.setHex(light2);
+    if (light3 !== undefined) uniforms.lightChannel3.value.setHex(light3);
+    if (light4 !== undefined) uniforms.lightChannel4.value.setHex(light4);
   }
 
   static updateIntersects(boxes) {

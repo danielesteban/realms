@@ -13,6 +13,7 @@ class Scene extends ThreeScene {
       dom,
       renderer,
     },
+    router,
     server,
     worlds,
   }) {
@@ -26,8 +27,11 @@ class Scene extends ThreeScene {
     this.ambient = new Ambient(this.player.head.context.state === 'running');
     this.sfx = new SFX({ listener: this.player.head });
     this.pointables = [];
+    this.router = router;
     this.server = server;
     this.worlds = worlds;
+
+    server.addEventListener('session', this.onSession.bind(this));
 
     const onFirstInteraction = () => {
       document.removeEventListener('mousedown', onFirstInteraction);
@@ -76,6 +80,13 @@ class Scene extends ThreeScene {
     });
     if (world && world.onAnimationTick) {
       world.onAnimationTick({ animation, camera });
+    }
+  }
+
+  onSession() {
+    const { world } = this;
+    if (world && world.onSession) {
+      world.onSession();
     }
   }
 

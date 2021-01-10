@@ -1,8 +1,8 @@
 {
-  "name": "realmsvr2-server",
+  "name": "realms-server",
   "description": "realmsvr server",
   "author": "Daniel Esteban Nombela",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT",
   "private": true,
   "scripts": {

@@ -83,8 +83,7 @@ class UI extends Mesh {
         input.addEventListener(type, ({ target: { value } }) => {
           switch (input.type) {
             case 'color':
-              this.auxColor.set(value);
-              value = { r: this.auxColor.r, g: this.auxColor.g, b: this.auxColor.b };
+              value = this.auxColor.set(value).getHex();
               break;
             default:
               break;
@@ -212,7 +211,7 @@ class UI extends Mesh {
         const { input/* , canvas */ } = inputs.get(key);
         switch (input.type) {
           case 'color':
-            input.value = `#${auxColor.copy(meta[key]).getHexString()}`;
+            input.value = `#${auxColor.setHex(meta[key]).getHexString()}`;
             break;
           default:
             input.value = meta[key];

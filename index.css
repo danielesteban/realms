@@ -19,6 +19,7 @@ button, a.button {
   border-radius: 4px;
   text-decoration: none;
   cursor: pointer;
+  font-family: inherit;
 }
 
 button.primary, a.button.primary {
@@ -65,6 +66,7 @@ input[type="color"], input[type="email"], input[type="password"], input[type="te
   outline: 0;
   margin: 0;
   width: 100%;
+  font-family: inherit;
 }
 
 input[type="color"] {
@@ -190,6 +192,53 @@ body.pointerlock #discord {
 
 #support.unsupported {
   color: #f33;
+}
+
+.dialog {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, .5);
+}
+
+.dialog.open {
+  display: block;
+}
+
+.dialog .wrapper {
+  position: absolute;
+  box-sizing: border-box;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #111;
+  border: 1px solid #000;
+  border-radius: 4px;
+  width: 320px;
+  padding: 1rem;
+}
+
+.dialog .close {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  color: #999;
+  cursor: pointer;
+}
+
+.dialog .spacer {
+  margin-top: 1rem;
+  height: 1rem;
+  border-top: 1px dashed #666;
+}
+
+.dialog .submit {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0;
 }
 
 .ui {
