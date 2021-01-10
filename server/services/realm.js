@@ -23,7 +23,12 @@ module.exports.onClient = (client, req) => {
         if (!realm) {
           throw notFound();
         }
-        const room = new RealmRoom(realm);
+        const room = new RealmRoom({
+          realm,
+          onEmpty: () => {
+            rooms.delete(slug);
+          },
+        });
         rooms.set(slug, room);
         return room;
       })

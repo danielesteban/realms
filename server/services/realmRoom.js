@@ -1,9 +1,10 @@
 const Room = require('./room');
 
 class RealmRoom extends Room {
-  constructor(realm) {
+  constructor({ realm, onEmpty }) {
     super({});
     this.realm = realm;
+    this.onEmpty = onEmpty;
   }
 
   onInit(client, payload) {

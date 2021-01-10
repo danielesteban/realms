@@ -42,7 +42,7 @@ class Realm extends Mesh {
       ctx.fillRect(0, canvas.height - 64, canvas.width, 64);
       ctx.fillStyle = '#fff';
       ctx.font = '700 30px monospace';
-      ctx.fillText(this.meta.name, 20, canvas.height - 24);
+      ctx.fillText(this.meta.name, 20, canvas.height - 22);
       this.material.map.needsUpdate = true;
       this.visible = true;
     };
@@ -50,9 +50,9 @@ class Realm extends Mesh {
     image.onload = () => draw(image);
     this.image = image;
     this.scale.set(0.6, 0.6, 1);
-    this.visible = false;
     this.add(new Frame());
     this.add(new Stand());
+    this.visible = false;
   }
 
   dispose() {

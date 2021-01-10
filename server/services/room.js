@@ -24,9 +24,14 @@ class Room {
         type: 'LEAVE',
         json: client.id,
       });
-      if (!clients.length && pingInterval) {
-        clearInterval(pingInterval);
-        delete this.pingInterval;
+      if (!clients.length) {
+        if (pingInterval) {
+          clearInterval(pingInterval);
+          delete this.pingInterval;
+        }
+        if (this.onEmpty) {
+          this.onEmpty();
+        }
       }
     }
   }

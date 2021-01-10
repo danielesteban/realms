@@ -8,6 +8,7 @@ import Grid from '../renderables/grid.js';
 import Dome from '../renderables/dome.js';
 import Frame from '../renderables/frame.js';
 import Realm from '../renderables/realm.js';
+import Stand from '../renderables/stand.js';
 import UI from '../renderables/ui.js';
 
 class Menu extends Group {
@@ -24,14 +25,8 @@ class Menu extends Group {
     this.add(new Grid());
     this.add(new Dome());
 
-    const dist = 2.5;
-    const slice = Math.PI / 4;
-    const realms = [...Array(5)].map((v, i) => {
+    const realms = [...Array(5)].map(() => {
       const realm = new Realm();
-      const angle = Math.PI * -1 + slice * i;
-      realm.position.set(Math.cos(angle) * dist, 1.4, Math.sin(angle) * dist * 0.75 - 2);
-      realm.lookAt(0, 1.6, -1);
-      realm.animation = { position: realm.position.y, rotation: realm.rotation.y };
       pointables.push(realm);
       this.add(realm);
       return realm;
@@ -48,7 +43,7 @@ class Menu extends Group {
           label: 'Most popular',
           isActive: true,
           filter: 'popular',
-          onPointer: () => setFilter('popular'),
+          onPointer: () => this.setFilter('popular'),
         },
         {
           x: 16,
@@ -57,7 +52,7 @@ class Menu extends Group {
           height: 48,
           label: 'Latest',
           filter: 'latest',
-          onPointer: () => setFilter('latest'),
+          onPointer: () => this.setFilter('latest'),
         },
         {
           x: 16,
@@ -66,7 +61,7 @@ class Menu extends Group {
           height: 48,
           label: 'Your Realms',
           filter: 'user',
-          onPointer: () => setFilter('user'),
+          onPointer: () => this.setFilter('user'),
         },
         {
           x: 64,
@@ -75,6 +70,8 @@ class Menu extends Group {
           height: 40,
           label: '<',
           isDisabled: true,
+          pagination: 'prev',
+          onPointer: () => this.setPage(this.page - 1),
         },
         {
           x: 144,
@@ -83,11 +80,17 @@ class Menu extends Group {
           height: 40,
           label: '>',
           isDisabled: true,
+          pagination: 'next',
+          onPointer: () => this.setPage(this.page + 1),
         },
       ],
     });
     ui.add(new Frame());
-    ui.position.set(0, 1, -2.25);
+    const stand = new Stand();
+    stand.position.set(0, -1, -0.1);
+    stand.scale.set(0.25, 1.5, 0.125);
+    ui.add(stand);
+    ui.position.set(0, 1.125, -2.125);
     ui.lookAt(0, 1.6, 0);
     pointables.push(ui);
     this.add(ui);
@@ -127,6 +130,9 @@ class Menu extends Group {
       player.move(wrap);
     }
     realms.forEach((realm, i) => {
+      if (!realm.visible) {
+        return;
+      }
       const t = animation.time + i * 2;
       realm.position.y = realm.animation.position + Math.sin(t) * 0.02;
       realm.rotation.y = realm.animation.rotation + Math.sin(t * 0.75) * 0.1;
@@ -160,24 +166,66 @@ class Menu extends Group {
     });
   }
 
+  setFilter(filter) {
+    const { player, server, ui } = this;
+    if (filter === 'user' && !server.session) {
+      player.unlock();
+      server.showDialog('session');
+      return;
+    }
+    this.filter = filter;
+    this.setPage(0);
+    ui.buttons.forEach((button) => {
+      button.isActive = button.filter === filter;
+    });
+    ui.draw();
+  }
+
   setPage(page) {
-    const { filter, realms, server } = this;
+    const {
+      filter,
+      realms,
+      server,
+      ui,
+    } = this;
+    this.page = page;
+    realms.forEach((realm) => {
+      realm.visible = false;
+    });
+    ui.buttons.forEach((button) => {
+      if (button.pagination) {
+        button.isDisabled = true;
+      }
+    });
+    ui.draw();
     server.request({
       endpoint: `realms/${filter}/${page}`,
     })
-      .then(({ realms: data }) => {
-        realms.forEach((realm, i) => {
-          const meta = data[i];
-          if (meta) {
-            realm.update({
-              ...meta,
-              screenshot: `${server.baseURL}/realm/${meta._id}/screenshot`,
-            });
-          } else {
-            realm.visible = false;
+      .then(({ realms: data, pages }) => {
+        const count = data.length;
+        const dist = 2.5;
+        const slice = Math.PI / 4;
+        const offset = Math.PI * -1 - slice * (count - 5) * 0.5;
+        data.forEach((meta, i) => {
+          const realm = realms[i];
+          realm.update({
+            ...meta,
+            screenshot: `${server.baseURL}/realm/${meta._id}/screenshot`,
+          });
+          const angle = offset + slice * i;
+          realm.position.set(Math.cos(angle) * dist, 1.5, Math.sin(angle) * dist * 0.75 - 2);
+          realm.lookAt(0, 1.6, -1);
+          realm.animation = { position: realm.position.y, rotation: realm.rotation.y };
+        });
+        ui.buttons.forEach((button) => {
+          if (button.pagination === 'prev') {
+            button.isDisabled = page === 0;
+          }
+          if (button.pagination === 'next') {
+            button.isDisabled = page + 1 === pages;
           }
         });
-        // TODO: Update pagination!
+        ui.draw();
       });
   }
 
