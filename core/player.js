@@ -366,6 +366,16 @@ class Player extends Group {
     );
     this.updateMatrixWorld();
   }
+
+  unlock() {
+    const { desktopControls, xr } = this;
+    if (desktopControls.isLocked) {
+      document.exitPointerLock();
+    }
+    if (xr.enabled && xr.isPresenting) {
+      xr.getSession().end();
+    }
+  }
 }
 
 export default Player;

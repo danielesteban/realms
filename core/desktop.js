@@ -33,6 +33,7 @@ class DesktopControls {
     this.raycaster = new Raycaster();
     this.raycaster.far = 32;
     this.renderer = renderer;
+    this.speed = 6;
     this.xr = xr;
     this.onBlur = this.onBlur.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
@@ -78,6 +79,7 @@ class DesktopControls {
       isLocked,
       pointer,
       raycaster,
+      speed,
       xr,
     } = this;
     if (!isLocked) {
@@ -113,7 +115,7 @@ class DesktopControls {
           .addScaledVector(worldUp, keyboard.y)
           .addScaledVector(forward, keyboard.z)
           .normalize()
-          .multiplyScalar(delta * 6)
+          .multiplyScalar(delta * speed)
       );
     }
     ['primary', 'secondary', 'tertiary'].forEach((button) => {
@@ -130,6 +132,7 @@ class DesktopControls {
     buttonState.primary = false;
     buttonState.secondary = false;
     buttonState.tertiary = false;
+    this.buttons = { ...buttonState };
     keyboard.set(0, 0, 0);
   }
 

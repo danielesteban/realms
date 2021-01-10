@@ -13,7 +13,7 @@ module.exports.onClient = (client, req) => {
     ~(req.headers['user-agent'] || '').indexOf('Headless')
   );
   let { slug } = req.params;
-  slug = `${slug}`.toLowerCase();
+  slug = `${slug}`;
   (!rooms.has(slug) ? (
     Realm
       .findOne({ slug })
@@ -105,7 +105,7 @@ module.exports.getScreenshot = [
           .then(({ screenshot }) => (
             res
               .set('Cache-Control', 'must-revalidate')
-              .set('Content-Type', 'image/jpeg')
+              .set('Content-Type', 'image/png')
               .set('Last-Modified', lastModified)
               .send(screenshot)
           ));
@@ -131,8 +131,7 @@ module.exports.list = (filter) => ([
           .sort(sorting)
           .skip(page * pageSize)
           .limit(pageSize)
-          .select('creator name slug createdAt')
-          .populate('creator', 'name')
+          .select('name slug createdAt')
           .then((realms) => (
             res.json({
               pages: Math.ceil(count / pageSize),

@@ -5,8 +5,8 @@ import {
   Vector3,
 } from '../core/three.js';
 import Peers from '../core/peers.js';
+import RealmUI from '../renderables/realmUI.js';
 import Voxels from '../renderables/voxels.js';
-import UI from '../renderables/ui.js';
 
 class Realm extends Group {
   constructor(scene, { slug }) {
@@ -36,11 +36,12 @@ class Realm extends Group {
     });
     this.add(this.peers);
 
-    this.ui = new UI({});
+    this.ui = new RealmUI();
     this.ui.addEventListener('button', ({ id }) => {
       switch (id) {
         case 'create':
         case 'fork':
+          this.player.unlock();
           if (scene.server.session) {
             alert('coming soon!');
           } else {
@@ -305,7 +306,14 @@ class Realm extends Group {
   }
 
   onUnload() {
-    const { worker, ui } = this;
+    const {
+      chunks,
+      peers,
+      worker,
+      ui,
+    } = this;
+    chunks.forEach((chunk) => chunk.dispose());
+    peers.disconnect();
     worker.terminate();
     ui.dispose();
   }

@@ -4,6 +4,11 @@ const { location } = document;
 const { history } = window;
 
 class Router extends EventDispatcher {
+  constructor() {
+    super();
+    window.addEventListener('popstate', this.update.bind(this));
+  }
+
   init() {
     if (location.hash) {
       history.replaceState({}, '', location.hash.substr(1));

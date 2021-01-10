@@ -208,21 +208,26 @@ class Server extends EventDispatcher {
     close.addEventListener('click', () => this.closeDialogs());
     wrapper.appendChild(close);
 
+    const spacer = () => {
+      const spacer = document.createElement('div');
+      spacer.style.marginTop = '1.5rem';
+      const or = document.createElement('div');
+      or.innerText = 'or';
+      spacer.appendChild(or);
+      spacer.className = 'spacer';
+      wrapper.appendChild(spacer);
+    };
+
     const googleWrapper = document.createElement('div');
     googleWrapper.className = 'submit';
     const google = document.createElement('button');
     google.style.fontSize = '1.25em';
-    google.style.marginBottom = '0.5rem';
     google.innerText = 'Sign-In with Google';
     google.addEventListener('click', () => this.loginWithGoogle());
     googleWrapper.appendChild(google);
     wrapper.appendChild(googleWrapper);
 
-    {
-      const spacer = document.createElement('div');
-      spacer.className = 'spacer';
-      wrapper.appendChild(spacer);
-    }
+    spacer();
 
     const form = document.createElement('form');
     const emailLabel = document.createElement('label');
@@ -231,17 +236,23 @@ class Server extends EventDispatcher {
     const email = document.createElement('input');
     email.type = 'email';
     form.appendChild(email);
+    const passwordWrapper = document.createElement('div');
+    passwordWrapper.style.display = 'none';
+    email.addEventListener('input', () => {
+      passwordWrapper.style.display = email.value.trim() ? '' : 'none';
+    });
     const passwordLabel = document.createElement('label');
     passwordLabel.innerText = 'Password';
-    form.appendChild(passwordLabel);
+    passwordWrapper.appendChild(passwordLabel);
     const password = document.createElement('input');
     password.type = 'password';
-    form.appendChild(password);
+    passwordWrapper.appendChild(password);
+    form.appendChild(passwordWrapper);
     const submitWrapper = document.createElement('div');
     submitWrapper.className = 'submit';
     const submit = document.createElement('button');
     submit.type = 'submit';
-    submit.innerText = 'Sign-In';
+    submit.innerText = 'Sign-In with Email';
     submitWrapper.appendChild(submit);
     form.appendChild(submitWrapper);
     form.addEventListener('submit', (e) => {
@@ -253,11 +264,7 @@ class Server extends EventDispatcher {
     });
     wrapper.appendChild(form);
 
-    {
-      const spacer = document.createElement('div');
-      spacer.className = 'spacer';
-      wrapper.appendChild(spacer);
-    }
+    spacer();
 
     const registerWrapper = document.createElement('div');
     registerWrapper.className = 'submit';

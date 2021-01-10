@@ -56,6 +56,7 @@ class Scene extends ThreeScene {
     this.background = null;
     this.fog = null;
     ambient.set(null);
+    player.desktopControls.speed = 6;
     player.detachAll();
     pointables.length = 0;
     this.world = new worlds[world](this, options);

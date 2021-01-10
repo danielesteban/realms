@@ -180,6 +180,11 @@ class Voxels extends Mesh {
     this.matrixAutoUpdate = false;
   }
 
+  dispose() {
+    const { geometry } = this;
+    geometry.dispose();
+  }
+
   update({
     color,
     lighting,

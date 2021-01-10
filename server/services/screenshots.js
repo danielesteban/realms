@@ -55,10 +55,7 @@ class Screenshots {
           ))
           .then(() => (
             page
-              .screenshot({
-                type: 'jpeg',
-                quality: 85,
-              })
+              .screenshot({ type: 'png' })
           ))
           .then((buffer) => {
             model.screenshot = buffer;

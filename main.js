@@ -20,7 +20,7 @@ const renderer = new Renderer({
 
 router.addEventListener('update', ({ slug }) => {
   if (!slug) {
-    router.replace('/test-realm');
+    renderer.scene.load('Menu');
     return;
   }
   renderer.scene.load('Realm', { slug });

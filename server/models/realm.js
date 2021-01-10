@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const URLSlugs = require('mongoose-url-slugs');
+const slug = require('mongoose-slug-updater');
 const Generators = require('../generators');
 const Screenshots = require('../services/screenshots');
 
@@ -20,6 +20,7 @@ const RealmSchema = new mongoose.Schema({
   light3: { type: Number, default: 0x3f3f3f },
   light4: { type: Number, default: 0x1f1f1f },
   screenshot: Buffer,
+  slug: { type: String, slug: 'name', unique: true },
   views: {
     type: Number,
     default: 0,
@@ -87,6 +88,6 @@ RealmSchema.statics = {
   },
 };
 
-RealmSchema.plugin(URLSlugs(['name']));
+RealmSchema.plugin(slug);
 
 module.exports = mongoose.model('Realm', RealmSchema);

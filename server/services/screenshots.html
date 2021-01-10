@@ -47,9 +47,10 @@
       const camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 512);
       camera.position.set(
         config.width * Voxels.scale * 0.5,
-        3.1,
-        config.depth * Voxels.scale * 0.5
+        config.height * Voxels.scale * 0.25,
+        config.depth * Voxels.scale * 0.75
       );
+      camera.updateMatrixWorld();
 
       const scene = new Scene();
       scene.background = (new Color()).setHex(meta.background);
