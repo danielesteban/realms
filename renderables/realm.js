@@ -18,6 +18,8 @@ class Realm extends Mesh {
       Realm.setupGeometry();
     }
     const renderer = document.createElement('canvas');
+    renderer.width = 512;
+    renderer.height = 512;
     const texture = new CanvasTexture(renderer);
     texture.anisotropy = 8;
     texture.encoding = sRGBEncoding;
@@ -30,13 +32,9 @@ class Realm extends Mesh {
     const draw = (image) => {
       const canvas = this.material.map.image;
       const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (image) {
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.drawImage(image, 0, 0);
-      } else {
-        canvas.width = 512;
-        canvas.height = 512;
+        ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
       }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(0, canvas.height - 64, canvas.width, 64);
