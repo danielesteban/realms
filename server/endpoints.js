@@ -80,6 +80,7 @@ module.exports = (api) => {
     preventCache,
     user.loginWithGoogle
   );
+
   api.get(
     '/user/google/authenticate',
     preventCache,

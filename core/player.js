@@ -131,6 +131,7 @@ class Player extends Group {
       return controller;
     });
     this.desktopControls = new DesktopControls({
+      camera,
       cursor: dom.cursor,
       renderer: dom.renderer,
       xr,
@@ -304,7 +305,7 @@ class Player extends Group {
         }
       }
     });
-    desktopControls.onAnimationTick({ animation, camera, player: this });
+    desktopControls.onAnimationTick({ animation, player: this });
   }
 
   move(offset) {

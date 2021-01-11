@@ -8,7 +8,7 @@ import {
 // Player desktop controls
 
 class DesktopControls {
-  constructor({ renderer, xr }) {
+  constructor({ camera, renderer, xr }) {
     this.isDesktop = true;
     this.aux = {
       center: new Vector2(),
@@ -28,6 +28,7 @@ class DesktopControls {
       tertiary: false,
     };
     this.buttonState = { ...this.buttons };
+    this.camera = camera;
     this.keyboard = new Vector3(0, 0, 0);
     this.pointer = new Vector2(0, 0);
     this.raycaster = new Raycaster();
@@ -70,11 +71,12 @@ class DesktopControls {
     }
   }
 
-  onAnimationTick({ animation: { delta }, camera, player }) {
+  onAnimationTick({ animation: { delta }, player }) {
     const {
       aux,
       buttons,
       buttonState,
+      camera,
       keyboard,
       isLocked,
       pointer,
@@ -258,6 +260,11 @@ class DesktopControls {
       return;
     }
     document.body.requestPointerLock();
+  }
+
+  reset() {
+    this.camera.rotation.set(0, 0, 0);
+    this.speed = 6;
   }
 }
 

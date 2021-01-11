@@ -55,7 +55,7 @@
 
       const scene = new Scene();
       scene.background = (new Color()).setHex(meta.background);
-      scene.fog = new FogExp2(scene.background.getHex(), 0.01);
+      scene.fog = new FogExp2(scene.background.getHex(), 0.02);
 
       Voxels.setupOffsets(config);
       Voxels.updateOffsets(camera);

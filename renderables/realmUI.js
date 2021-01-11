@@ -13,7 +13,8 @@ import {
 
 class RealmUI extends Mesh {
   static setupGeometry() {
-    RealmUI.geometry = new PlaneBufferGeometry(1, 1, 1, 1);
+    RealmUI.geometry = new PlaneBufferGeometry(1, 1);
+    RealmUI.geometry.deleteAttribute('normal');
   }
 
   constructor() {

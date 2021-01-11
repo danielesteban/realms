@@ -11,6 +11,7 @@ import Stand from './stand.js';
 class Realm extends Mesh {
   static setupGeometry() {
     Realm.geometry = new PlaneBufferGeometry(1, 1);
+    Realm.geometry.deleteAttribute('normal');
   }
 
   constructor() {

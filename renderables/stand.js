@@ -17,6 +17,8 @@ class Stand extends Mesh {
       color.setXYZ(i + 2, c, c, c);
     }
     Stand.geometry.setAttribute('color', color);
+    Stand.geometry.deleteAttribute('normal');
+    Stand.geometry.deleteAttribute('uv');
   }
 
   static setupMaterial() {

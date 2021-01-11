@@ -13,7 +13,7 @@ class Realm extends Group {
     super();
 
     scene.background = new Color(0);
-    scene.fog = new FogExp2(0, 0.01);
+    scene.fog = new FogExp2(0, 0.02);
 
     this.brush = {
       color: new Color(),
@@ -55,7 +55,7 @@ class Realm extends Group {
             endpoint: id === 'fork' ? `realm/${this.config._id}/fork` : 'realm',
             method: 'POST',
           })
-            .then((slug) => scene.router.replace(`/${slug}`));
+            .then((slug) => scene.router.push(`/${slug}`));
           break;
         case 'menu':
           scene.router.push('/');
@@ -159,21 +159,13 @@ class Realm extends Group {
               },
             });
           } else {
-            let type = 0;
+            // TODO: move this out of desktop controls with events
+            const type = isPlacing ? player.desktopControls.brush.type + 1 : 0;
             const color = {
               r: Math.floor(brush.color.r * 0xFF),
               g: Math.floor(brush.color.g * 0xFF),
               b: Math.floor(brush.color.b * 0xFF),
             };
-            if (isPlacing) {
-              // TODO: move this out of desktop controls with events
-              type = player.desktopControls.brush.type + 1;
-              if (type > 1) {
-                color.r = 0xBF;
-                color.g = 0xBF;
-                color.b = 0xBF;
-              }
-            }
             // TODO: get a scalar from the ui for this
             const noise = ((color.r + color.g + color.b) / 3) * 0.15;
 

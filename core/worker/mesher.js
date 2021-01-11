@@ -279,7 +279,11 @@ function MeshChunk(cx, cy, cz, world) {
   }
   const views = {
     color: new Uint8Array(geometry.color),
-    index: new Uint16Array(geometry.index),
+    index: geometry.offset <= 65535 ? (
+      new Uint16Array(geometry.index)
+    ) : (
+      new Uint32Array(geometry.index)
+    ),
     lighting: new Uint8Array(geometry.lighting),
     position: new Uint8Array(geometry.position),
   };

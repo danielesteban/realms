@@ -9,6 +9,8 @@ import {
 class Grid extends Mesh {
   static setupGeometry() {
     Grid.geometry = new PlaneBufferGeometry(64, 64);
+    Grid.geometry.deleteAttribute('normal');
+    Grid.geometry.deleteAttribute('uv');
     Grid.geometry.rotateX(Math.PI * -0.5);
   }
 

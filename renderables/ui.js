@@ -11,7 +11,8 @@ import {
 
 class UI extends Mesh {
   static setupGeometry() {
-    UI.geometry = new PlaneBufferGeometry(1, 1, 1, 1);
+    UI.geometry = new PlaneBufferGeometry(1, 1);
+    UI.geometry.deleteAttribute('normal');
   }
 
   constructor({

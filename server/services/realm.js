@@ -1,14 +1,23 @@
 const { notFound } = require('@hapi/boom');
 const { body, param } = require('express-validator');
 const namor = require('namor');
+const config = require('../config');
 const { checkValidationResult } = require('./errorHandler');
-const RealmRoom = require('./realmRoom');
 const generators = Object.keys(require('../generators'));
 const { Realm } = require('../models');
+const RealmRoom = require('./realmRoom');
 
 const rooms = new Map();
 
 module.exports.onClient = (client, req) => {
+  if (req.headers.origin !== config.clientOrigin) {
+    client.send(RealmRoom.encode({
+      type: 'ERROR',
+      json: 'Origin not allowed.',
+    }), RealmRoom.noop);
+    client.terminate();
+    return;
+  }
   client.isHeadless = !!(
     ~(req.headers['user-agent'] || '').indexOf('Headless')
   );
@@ -40,8 +49,7 @@ module.exports.onClient = (client, req) => {
     .then((room) => (
       room.onClient(client)
     ))
-    .catch((e) => {
-      console.log(e);
+    .catch(() => {
       client.send(RealmRoom.encode({
         type: 'ERROR',
         json: 'Couldn\'t load room.',
@@ -62,10 +70,10 @@ module.exports.create = [
   checkValidationResult,
   (req, res, next) => {
     const generator = req.body.generator || 'default';
-    const name = req.body.name || namor.generate();
-    const width = 96;
-    const height = 96;
-    const depth = 96;
+    const name = req.body.name || namor.generate({ words: 3, saltLength: 0 });
+    const width = 64;
+    const height = 64;
+    const depth = 64;
     const realm = new Realm({
       creator: req.user._id,
       name,
@@ -101,7 +109,7 @@ module.exports.fork = [
         }
         const fork = new Realm({
           creator: req.user._id,
-          name: namor.generate(),
+          name: namor.generate({ words: 3, saltLength: 0 }),
           width: realm.width,
           height: realm.height,
           depth: realm.depth,
@@ -159,7 +167,18 @@ module.exports.list = (filter) => ([
     const { page } = req.params;
     const pageSize = 5;
     const selector = filter === 'user' ? { creator: req.user._id } : {};
-    const sorting = `${filter === 'popular' ? '-views ' : '-createdAt'}`;
+    let sorting;
+    switch (filter) {
+      default:
+        sorting = '-createdAt';
+        break;
+      case 'popular':
+        sorting = '-views';
+        break;
+      case 'user':
+        sorting = '-updatedAt';
+        break;
+    }
     Realm
       .countDocuments(selector)
       .then((count) => (

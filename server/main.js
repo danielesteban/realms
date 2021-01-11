@@ -40,7 +40,7 @@ app.set('multer', multer({
 app.use(bodyParser.json({
   limit: '1mb',
 }));
-app.use(cors());
+app.use(cors({ origin: config.clientOrigin }));
 if (config.production) {
   app.use(helmet({
     contentSecurityPolicy: false,

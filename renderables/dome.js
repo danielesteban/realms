@@ -18,6 +18,8 @@ class Dome extends Mesh {
       color.setXYZ(i + Math.floor(Math.random() * 3), r, g, b);
     }
     Dome.geometry.setAttribute('color', color);
+    Dome.geometry.deleteAttribute('normal');
+    Dome.geometry.deleteAttribute('uv');
   }
 
   static setupMaterial() {

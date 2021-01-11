@@ -7,6 +7,8 @@ import {
 class Frame extends Mesh {
   static setupGeometry() {
     Frame.geometry = new BoxBufferGeometry(1, 1, 0.1);
+    Frame.geometry.deleteAttribute('normal');
+    Frame.geometry.deleteAttribute('uv');
     Frame.geometry.translate(0, 0, -0.051);
   }
 

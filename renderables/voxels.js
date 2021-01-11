@@ -128,6 +128,9 @@ class Voxels extends Mesh {
 
   static updateIntersects(boxes) {
     const { vector } = Voxels.aux;
+    const model = new BoxBufferGeometry(1, 1, 1);
+    model.deleteAttribute('normal');
+    model.deleteAttribute('uv');
     const geometry = BufferGeometryUtils.mergeBufferGeometries(
       [...Array(boxes.length / 6)].map((v, i) => {
         const [x, y, z, sx, sy, sz] = boxes.slice(i * 6);
@@ -138,7 +141,8 @@ class Voxels extends Mesh {
             z + sz * 0.5
           )
           .multiplyScalar(Voxels.scale);
-        const box = new BoxBufferGeometry(sx * Voxels.scale, sy * Voxels.scale, sz * Voxels.scale);
+        const box = model.clone();
+        box.scale(sx * Voxels.scale, sy * Voxels.scale, sz * Voxels.scale);
         box.translate(vector.x, vector.y, vector.z);
         return box;
       })
@@ -196,10 +200,24 @@ class Voxels extends Mesh {
       return;
     }
     const { geometry } = this;
-    geometry.setAttribute('color', new BufferAttribute(color, 3));
-    geometry.setAttribute('lighting', new BufferAttribute(lighting, 4));
-    geometry.setAttribute('position', new BufferAttribute(position, 3));
-    geometry.setIndex(new BufferAttribute(index, 1));
+    const updateAttribute = (id, array, itemSize) => {
+      const attribute = geometry.getAttribute(id);
+      if (attribute && attribute.array.length === array.length) {
+        attribute.copyArray(array);
+        attribute.needsUpdate = true;
+      } else {
+        geometry.setAttribute(id, new BufferAttribute(array, itemSize));
+      }
+    };
+    updateAttribute('color', color, 3);
+    updateAttribute('lighting', lighting, 4);
+    updateAttribute('position', position, 3);
+    const currentIndex = geometry.getIndex();
+    if (currentIndex && currentIndex.array.length === index.length) {
+      currentIndex.copyArray(index);
+    } else {
+      geometry.setIndex(new BufferAttribute(index, 1));
+    }
     this.visible = true;
   }
 }
