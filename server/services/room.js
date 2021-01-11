@@ -51,16 +51,19 @@ class Room {
       return;
     }
     client.id = uuid();
-    const payload = {
-      json: { peers: clients.map(({ id }) => (id)) },
+    const defaultInit = {
+      json: { peers: clients.map(({ id }) => ({ id })) },
     };
     client.send(Room.encode({
       type: 'INIT',
-      ...(this.onInit ? this.onInit(client, payload) : payload),
+      ...(this.onInit ? this.onInit(client, defaultInit) : defaultInit),
     }), Room.noop);
+    const defaultJoin = {
+      json: { id: client.id },
+    };
     this.broadcast({
       type: 'JOIN',
-      json: client.id,
+      ...(this.onJoin ? this.onJoin(client, defaultJoin) : defaultJoin),
     });
     clients.push(client);
     client.isAlive = true;
@@ -96,17 +99,15 @@ class Room {
           || !signal
           || clients.findIndex(({ id }) => (id === peer)) === -1
         )) {
-          if (client) {
-            this.broadcast({
-              type: 'SIGNAL',
-              json: {
-                peer: client.id,
-                signal,
-              },
-            }, {
-              include: peer,
-            });
-          }
+          this.broadcast({
+            type: 'SIGNAL',
+            json: {
+              peer: client.id,
+              signal,
+            },
+          }, {
+            include: peer,
+          });
         }
         break;
       }

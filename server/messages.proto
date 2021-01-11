@@ -3,13 +3,14 @@ syntax = "proto3";
 
 message Message {
   enum Type {
-    ERROR = 1;
-    INIT = 2;
-    JOIN = 3;
-    LEAVE = 4;
-    META = 5;
-    SIGNAL = 6;
-    VOXEL = 7;
+    ALLOW = 1;
+    ERROR = 2;
+    INIT = 3;
+    JOIN = 4;
+    LEAVE = 5;
+    META = 6;
+    SIGNAL = 7;
+    VOXEL = 8;
   }
   Type type = 1;
   bytes buffer = 2;

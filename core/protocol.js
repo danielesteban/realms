@@ -86,6 +86,7 @@ export const protocol = $root.protocol = (() => {
                 case 5:
                 case 6:
                 case 7:
+                case 8:
                     break;
                 }
             if (message.buffer != null && message.hasOwnProperty("buffer"))
@@ -102,33 +103,37 @@ export const protocol = $root.protocol = (() => {
                 return object;
             let message = new $root.protocol.Message();
             switch (object.type) {
-            case "ERROR":
+            case "ALLOW":
             case 1:
                 message.type = 1;
                 break;
-            case "INIT":
+            case "ERROR":
             case 2:
                 message.type = 2;
                 break;
-            case "JOIN":
+            case "INIT":
             case 3:
                 message.type = 3;
                 break;
-            case "LEAVE":
+            case "JOIN":
             case 4:
                 message.type = 4;
                 break;
-            case "META":
+            case "LEAVE":
             case 5:
                 message.type = 5;
                 break;
-            case "SIGNAL":
+            case "META":
             case 6:
                 message.type = 6;
                 break;
-            case "VOXEL":
+            case "SIGNAL":
             case 7:
                 message.type = 7;
+                break;
+            case "VOXEL":
+            case 8:
+                message.type = 8;
                 break;
             }
             if (object.buffer != null)
@@ -146,7 +151,7 @@ export const protocol = $root.protocol = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
-                object.type = options.enums === String ? "ERROR" : 1;
+                object.type = options.enums === String ? "ALLOW" : 1;
                 if (options.bytes === String)
                     object.buffer = "";
                 else {
@@ -171,13 +176,14 @@ export const protocol = $root.protocol = (() => {
 
         Message.Type = (function() {
             const valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[1] = "ERROR"] = 1;
-            values[valuesById[2] = "INIT"] = 2;
-            values[valuesById[3] = "JOIN"] = 3;
-            values[valuesById[4] = "LEAVE"] = 4;
-            values[valuesById[5] = "META"] = 5;
-            values[valuesById[6] = "SIGNAL"] = 6;
-            values[valuesById[7] = "VOXEL"] = 7;
+            values[valuesById[1] = "ALLOW"] = 1;
+            values[valuesById[2] = "ERROR"] = 2;
+            values[valuesById[3] = "INIT"] = 3;
+            values[valuesById[4] = "JOIN"] = 4;
+            values[valuesById[5] = "LEAVE"] = 5;
+            values[valuesById[6] = "META"] = 6;
+            values[valuesById[7] = "SIGNAL"] = 7;
+            values[valuesById[8] = "VOXEL"] = 8;
             return values;
         })();
 

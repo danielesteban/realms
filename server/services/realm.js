@@ -40,7 +40,8 @@ module.exports.onClient = (client, req) => {
     .then((room) => (
       room.onClient(client)
     ))
-    .catch(() => {
+    .catch((e) => {
+      console.log(e);
       client.send(RealmRoom.encode({
         type: 'ERROR',
         json: 'Couldn\'t load room.',
@@ -84,6 +85,35 @@ module.exports.create = [
         res.json(slug)
       ))
       .catch(next);
+  },
+];
+
+module.exports.fork = [
+  param('id')
+    .isMongoId(),
+  checkValidationResult,
+  (req, res, next) => {
+    Realm
+      .findById(req.params.id)
+      .then((realm) => {
+        if (!realm) {
+          throw notFound();
+        }
+        const fork = new Realm({
+          creator: req.user._id,
+          name: namor.generate(),
+          width: realm.width,
+          height: realm.height,
+          depth: realm.depth,
+          voxels: realm.voxels,
+        });
+        fork
+          .save()
+          .then(({ slug }) => (
+            res.json(slug)
+          ))
+          .catch(next);
+      });
   },
 ];
 

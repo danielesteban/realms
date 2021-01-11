@@ -5,7 +5,12 @@ import Head from './head.js';
 // Peer head & hands
 
 class Peer extends Group {
-  constructor({ peer, connection, listener }) {
+  constructor({
+    peer,
+    connection,
+    isCreator,
+    listener,
+  }) {
     super();
     this.audio = new PositionalAudio(listener);
     this.audio.player = new Audio();
@@ -23,6 +28,7 @@ class Peer extends Group {
     this.head.visible = false;
     this.head.add(this.audio);
     this.add(this.head);
+    this.isCreator = isCreator;
     this.peer = peer;
   }
 

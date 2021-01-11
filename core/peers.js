@@ -89,19 +89,27 @@ class Peers extends Group {
     });
   }
 
-  broadcast(message) {
+  broadcast(message, { exclude, include } = {}) {
     const { peers } = this;
     const isRaw = message instanceof Uint8Array;
     const encoded = !isRaw ? (new TextEncoder()).encode(JSON.stringify(message)) : message;
     const payload = new Uint8Array(1 + encoded.byteLength);
     payload[0] = isRaw ? 0x02 : 0x03;
     payload.set(new Uint8Array(encoded.buffer), 1);
+    if (exclude && !Array.isArray(exclude)) {
+      exclude = [exclude];
+    }
+    if (include && !Array.isArray(include)) {
+      include = [include];
+    }
     peers.forEach((peer) => {
-      const { connection } = peer;
+      const { connection, peer: id } = peer;
       if (
         connection
         && connection._channel
         && connection._channel.readyState === 'open'
+        && (!include || ~include.indexOf(id))
+        && (!exclude || exclude.indexOf(id) === -1)
       ) {
         try {
           connection.send(payload);
@@ -112,7 +120,7 @@ class Peers extends Group {
     });
   }
 
-  connectToPeer({ id, initiator = false }) {
+  connectToPeer({ id, creator, initiator = false }) {
     const {
       onJoin,
       player,
@@ -122,7 +130,12 @@ class Peers extends Group {
       initiator,
       stream: userMedia,
     });
-    const peer = new Peer({ peer: id, connection, listener: player.head });
+    const peer = new Peer({
+      peer: id,
+      connection,
+      isCreator: creator,
+      listener: player.head,
+    });
     connection.on('error', () => {});
     connection.on('data', (data) => this.onPeerData(peer, data));
     connection.on('signal', (signal) => (
@@ -195,13 +208,15 @@ class Peers extends Group {
         }
         break;
       case 'INIT':
-        this.peers = event.json.peers.map((id) => this.connectToPeer({ id, initiator: true }));
+        this.peers = event.json.peers.map(({ id, creator }) => (
+          this.connectToPeer({ id, creator, initiator: true })
+        ));
         if (this.onInit) {
           this.onInit(event);
         }
         break;
       case 'JOIN':
-        peers.push(this.connectToPeer({ id: event.json }));
+        peers.push(this.connectToPeer(event.json));
         break;
       case 'LEAVE': {
         const index = peers.findIndex(({ peer: id }) => (id === event.json));

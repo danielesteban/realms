@@ -53,6 +53,7 @@ class RealmUI extends Mesh {
     this.texture = texture;
 
     this.drawList = [];
+    this.requests = [];
     this.buttons = new Map();
     this.inputs = new Map();
     this.labels = new Map();
@@ -72,10 +73,10 @@ class RealmUI extends Mesh {
       this.drawList.push(canvas);
       this.buttons.set(id, { button, canvas });
     };
-    const input = (id, label, type, visible = true) => {
+    const input = (id, label, type) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
-      div.style.display = visible ? '' : 'none';
+      div.style.display = 'none';
       const input = document.createElement('input');
       input.style.width = '100%';
       input.type = type;
@@ -135,9 +136,15 @@ class RealmUI extends Mesh {
       this.drawList.push(canvas);
     };
 
-    input('name', 'TITLE', 'text', false);
+    input('name', 'TITLE', 'text');
     label('name', 'TITLE');
     label('creator', 'CREATOR');
+
+    spacer();
+
+    button('fork', 'Make a copy');
+    button('create', 'Create new');
+    button('menu', 'Browse realms');
 
     spacer();
 
@@ -148,11 +155,6 @@ class RealmUI extends Mesh {
     input('light4', 'LIGHT CHANNEL 4', 'color');
     input('background', 'BACKGROUND', 'color');
     input('ambient', 'AMBIENT LIGHT', 'color');
-
-    spacer();
-
-    button('fork', 'Make a copy');
-    button('create', 'Create new');
 
     const help = (text) => {
       const div = document.createElement('div');
@@ -204,6 +206,51 @@ class RealmUI extends Mesh {
     ctx.fillText('COMING SOON!', renderer.width * 0.5, renderer.height * 0.6);
   }
 
+  showRequest(request) {
+    const { requests } = this;
+    if (requests.length) {
+      if (!requests.find(({ peer }) => (peer === request.peer))) {
+        requests.push(request);
+      }
+      return;
+    }
+    requests.push(request);
+    this.renderRequest(request);
+  }
+
+  renderRequest({ name, onAllow }) {
+    const { requests } = this;
+    const request = document.createElement('div');
+    request.className = 'request';
+    const question = document.createElement('div');
+    question.className = 'question';
+    question.innerText = `${name} wants to edit`;
+    request.appendChild(question);
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const onClose = () => {
+      document.body.removeChild(request);
+      requests.shift();
+      if (requests.length) {
+        this.renderRequest(requests[0]);
+      }
+    };
+    const dismiss = document.createElement('button');
+    dismiss.innerText = 'Nope';
+    dismiss.addEventListener('click', onClose);
+    actions.appendChild(dismiss);
+    const allow = document.createElement('button');
+    allow.innerText = 'Yep';
+    allow.addEventListener('click', () => {
+      onAllow();
+      onClose();
+    });
+    actions.appendChild(allow);
+    request.appendChild(actions);
+    document.body.appendChild(request);
+    // TODO: Implement canvas counterpart
+  }
+
   update(meta) {
     const { auxColor, inputs, labels } = this;
     Object.keys(meta).forEach((key) => {
@@ -231,14 +278,12 @@ class RealmUI extends Mesh {
       }
     });
     if (meta.canEdit !== undefined) {
-      [...inputs.values()].forEach(({ input/* , canvas */ }) => {
-        input.disabled = !meta.canEdit;
-        // TODO: Disable canvas counterpart
+      [...inputs.entries()].forEach(([id, { input/* , canvas */ }]) => {
+        const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;
+        input.parentNode.style.display = canEdit ? '' : 'none';
+        // TODO: Update canvas counterpart
       });
       {
-        const { input/* , canvas */ } = inputs.get('name');
-        input.parentNode.style.display = meta.isCreator ? '' : 'none';
-        // TODO: Update canvas counterpart
         const { label/* , canvas */ } = labels.get('name');
         label.parentNode.style.display = meta.isCreator ? 'none' : '';
         // TODO: Update canvas counterpart

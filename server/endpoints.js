@@ -21,6 +21,13 @@ module.exports = (api) => {
     realm.create
   );
 
+  api.post(
+    '/realm/:id/fork',
+    preventCache,
+    requireAuth,
+    realm.fork
+  );
+
   api.get(
     '/realm/:id/screenshot',
     realm.getScreenshot

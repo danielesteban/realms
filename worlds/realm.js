@@ -27,8 +27,10 @@ class Realm extends Group {
     this.player = scene.player;
     this.pointables = scene.pointables;
     this.router = scene.router;
+    this.server = scene.server;
     this.peers = new Peers({
       onInit: this.onInit.bind(this),
+      onPeerMessage: this.onPeerMessage.bind(this),
       onServerEvent: this.onServerEvent.bind(this),
       endpoint: `realm/${slug}`,
       player: this.player,
@@ -41,12 +43,22 @@ class Realm extends Group {
       switch (id) {
         case 'create':
         case 'fork':
-          this.player.unlock();
-          if (scene.server.session) {
-            alert('coming soon!');
-          } else {
-            scene.server.showDialog('session');
+          if (!this.config) {
+            return;
           }
+          this.player.unlock();
+          if (!this.server.session) {
+            this.server.showDialog('session');
+            return;
+          }
+          this.server.request({
+            endpoint: id === 'fork' ? `realm/${this.config._id}/fork` : 'realm',
+            method: 'POST',
+          })
+            .then((slug) => scene.router.replace(`/${slug}`));
+          break;
+        case 'menu':
+          scene.router.push('/');
           break;
         default:
           break;
@@ -106,10 +118,6 @@ class Realm extends Group {
       chunk.geometry.instanceCount = Voxels.offsets.visible;
     });
 
-    if (!config.canEdit) {
-      return;
-    }
-
     [
       player.desktopControls,
       ...player.controllers,
@@ -131,6 +139,10 @@ class Realm extends Group {
           raycaster.intersectObjects(Voxels.intersects)[0] || false
         ) : pointer.target;
         if (hit) {
+          if (!config.canEdit) {
+            this.requestEdit();
+            return;
+          }
           const isPlacing = isDesktop ? buttons.primaryDown : buttons.triggerDown;
           const isPicking = isDesktop ? buttons.tertiaryDown : buttons.primaryDown;
           hit.point
@@ -204,9 +216,7 @@ class Realm extends Group {
   onInit({ json: meta, buffer: voxels }) {
     if (!this.config) {
       this.config = {
-        // canEdit: meta.isCreator,
-        // Everybody can edit until I got multiple realms working
-        canEdit: true,
+        _id: meta._id,
         width: meta.width,
         height: meta.height,
         depth: meta.depth,
@@ -232,6 +242,7 @@ class Realm extends Group {
         )
       );
     }
+    this.config.canEdit = meta.isCreator;
 
     this.worker.postMessage({
       type: 'load',
@@ -252,9 +263,35 @@ class Realm extends Group {
     }
   }
 
+  onPeerMessage({ peer, message }) {
+    const { peers, ui } = this;
+    if (message instanceof Uint8Array) {
+      return;
+    }
+    switch (message.type) {
+      case 'edit':
+        ui.showRequest({
+          name: message.name,
+          onAllow: () => (
+            peers.serverRequest({
+              type: 'ALLOW',
+              json: { peer: peer.peer },
+            })
+          ),
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
   onServerEvent({ type, json }) {
-    const { router, worker } = this;
+    const { config, router, worker } = this;
     switch (type) {
+      case 'ALLOW':
+        config.canEdit = true;
+        this.ui.update({ canEdit: true });
+        break;
       case 'ERROR':
         router.replace('/');
         break;
@@ -263,7 +300,7 @@ class Realm extends Group {
           router.replace(`/${json.slug}`);
           return;
         }
-        this.ui.update(json, true);
+        this.ui.update(json);
         break;
       case 'VOXEL':
         worker.postMessage({
@@ -320,6 +357,17 @@ class Realm extends Group {
     peers.disconnect();
     worker.terminate();
     ui.dispose();
+  }
+
+  requestEdit() {
+    const { peers, server } = this;
+    const creator = peers.peers.find(({ isCreator }) => (isCreator));
+    if (creator) {
+      peers.broadcast({
+        type: 'edit',
+        name: server.session ? server.profile.name : 'Anonymous',
+      }, { include: creator.peer });
+    }
   }
 }
 

@@ -23,6 +23,7 @@
         sRGBEncoding,
         WebGLRenderer,
       } from '__CLIENT__/core/three.js';
+      import Renderer from '__CLIENT__/core/renderer.js';
       import Voxels from '__CLIENT__/renderables/voxels.js';
 
       const renderer = new WebGLRenderer({
@@ -54,7 +55,7 @@
 
       const scene = new Scene();
       scene.background = (new Color()).setHex(meta.background);
-      scene.fog = new FogExp2(scene.background.clone(), 0.01);
+      scene.fog = new FogExp2(scene.background.getHex(), 0.01);
 
       Voxels.setupOffsets(config);
       Voxels.updateOffsets(camera);

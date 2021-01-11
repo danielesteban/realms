@@ -251,6 +251,25 @@ body.pointerlock #discord {
   margin: 0.5rem 0;
 }
 
+.request {
+  position: fixed;
+  bottom: 7rem;
+  right: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background: #111;
+  border: 1px solid #000;
+}
+
+.request .actions {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.request .question {
+  margin-bottom: 0.75rem;
+}
+
 .ui {
   position: fixed;
   top: 0;

@@ -7,10 +7,10 @@ class RealmRoom extends Room {
     this.onEmpty = onEmpty;
   }
 
-  onInit(client, payload) {
+  onInit(client) {
+    const { clients } = this;
     const {
       _doc: {
-        _id,
         creator,
         voxels,
         ...meta
@@ -22,6 +22,8 @@ class RealmRoom extends Room {
       && creator._id.equals(client.user._id)
     );
 
+    client.canEdit = client.isCreator;
+
     if (
       !client.isCreator
       && !client.isHeadless
@@ -31,14 +33,27 @@ class RealmRoom extends Room {
     }
 
     return {
-      ...payload,
       json: {
-        ...payload.json,
         ...meta,
         creator: creator.name,
         isCreator: client.isCreator,
+        peers: clients.map(({ id, user }) => ({
+          id,
+          ...(user && creator._id.equals(user._id) ? { creator: true } : {}),
+        })),
       },
       buffer: voxels,
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  onJoin(client, payload) {
+    return {
+      ...payload,
+      json: {
+        ...payload.json,
+        creator: client.isCreator,
+      },
     };
   }
 
@@ -59,13 +74,31 @@ class RealmRoom extends Room {
 
   onRequest(client, request) {
     super.onRequest(client, request);
-    const { realm } = this;
+    const { clients, realm } = this;
     const { sanitizeLight } = RealmRoom;
     switch (request.type) {
+      case 'ALLOW': {
+        if (!client.isCreator) {
+          return;
+        }
+        let { peer } = request.json || {};
+        peer = `${peer}`;
+        peer = peer && clients.find(({ id }) => (id === peer));
+        if (!peer) {
+          return;
+        }
+        peer.canEdit = true;
+        this.broadcast({
+          type: 'ALLOW',
+        }, {
+          include: peer.id,
+        });
+        break;
+      }
       case 'META': {
-        // if (!client.isCreator) {
-        //   return;
-        // }
+        if (!client.canEdit) {
+          return;
+        }
         let {
           name,
           background,
@@ -75,7 +108,7 @@ class RealmRoom extends Room {
           light3,
           light4,
         } = request.json || {};
-        name = `${name || ''}`;
+        name = client.isCreator ? `${name || ''}` : false;
         background = sanitizeLight(background);
         ambient = sanitizeLight(ambient);
         light1 = sanitizeLight(light1);
@@ -127,9 +160,9 @@ class RealmRoom extends Room {
         break;
       }
       case 'VOXEL': {
-        // if (!client.isCreator) {
-        //   return;
-        // }
+        if (!client.canEdit) {
+          return;
+        }
         const {
           width, height, depth,
           voxels,
