@@ -109,8 +109,6 @@ class DesktopControls {
         worldUp,
       } = this.aux;
       camera.getWorldDirection(forward);
-      forward.y = 0;
-      forward.normalize();
       right.crossVectors(forward, worldUp);
       player.move(
         direction
