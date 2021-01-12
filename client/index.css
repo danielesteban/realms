@@ -79,8 +79,13 @@ input[type="email"]:disabled, input[type="password"]:disabled, input[type="text"
 
 #discord {
   position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
 }
 
 body.pointerlock #discord {
@@ -259,8 +264,8 @@ body.pointerlock #discord {
 }
 
 .music {
-  bottom: 0rem;
-  right: 6rem;
+  bottom: 0.5rem;
+  right: 7.5rem;
   display: flex;
 }
 
@@ -268,6 +273,7 @@ body.pointerlock #discord {
   width: 100px;
   height: 100px;
   vertical-align: middle;
+  border-radius: 3px 0 0 3px;
 }
 
 .music .wrapper {
@@ -324,7 +330,7 @@ body.pointerlock .music {
 }
 
 .request {
-  bottom: 7rem;
+  bottom: 10rem;
   right: 1rem;
   padding: 0.75rem;
 }
@@ -353,7 +359,7 @@ body.pointerlock .ui {
 }
 
 @media (max-height: 800px) {
-  .ui {
+  .music, .ui {
     display: none;
   }
 }

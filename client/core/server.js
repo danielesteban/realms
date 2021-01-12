@@ -169,7 +169,7 @@ class Server extends EventDispatcher {
 
     const form = document.createElement('form');
     const nameLabel = document.createElement('label');
-    nameLabel.innerText = 'Name';
+    nameLabel.innerText = 'Name (This will be public)';
     form.appendChild(nameLabel);
     const name = document.createElement('input');
     name.type = 'text';
@@ -231,7 +231,7 @@ class Server extends EventDispatcher {
 
     const form = document.createElement('form');
     const nameLabel = document.createElement('label');
-    nameLabel.innerText = 'Name';
+    nameLabel.innerText = 'Name (This will be public)';
     form.appendChild(nameLabel);
     const name = document.createElement('input');
     name.type = 'text';
