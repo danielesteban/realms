@@ -37,7 +37,7 @@ class Menu extends Group {
       buttons: [
         {
           x: 40,
-          y: 16,
+          y: 8,
           width: 44,
           height: 44,
           label: '<',
@@ -47,7 +47,7 @@ class Menu extends Group {
         },
         {
           x: 172,
-          y: 16,
+          y: 8,
           width: 44,
           height: 44,
           label: '>',
@@ -84,14 +84,18 @@ class Menu extends Group {
           onPointer: () => this.setFilter('user'),
         },
       ],
+      graphics: [({ ctx }) => {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(0, 0, 256, 60);
+      }],
       labels: [
         {
           x: 128,
-          y: 39,
+          y: 31,
           text: '...',
           pagination: true,
         },
-      ]
+      ],
     });
     ui.add(new Frame());
     const stand = new Stand();
@@ -240,7 +244,7 @@ class Menu extends Group {
         });
         ui.labels.forEach((label) => {
           if (label.pagination) {
-            label.text = `${page} / ${pages}`;
+            label.text = `${page + 1} / ${pages}`;
           }
         });
         ui.draw();
