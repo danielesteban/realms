@@ -36,7 +36,9 @@ class Music {
     // This is maybe nuts.. but I'm feeling nostalgic this days.
     const ui = document.createElement('div');
     ui.className = 'music';
-    ui.style.display = 'none';
+    if (!this.isRunning) {
+      ui.style.display = 'none';
+    }
     const image = document.createElement('img');
     image.className = 'image';
     ui.appendChild(image);
