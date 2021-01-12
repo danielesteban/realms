@@ -1,5 +1,5 @@
 import { Scene as ThreeScene } from './three.js';
-import Ambient from './ambient.js';
+import Music from './music.js';
 import Player from './player.js';
 import SFX from './sfx.js';
 
@@ -24,7 +24,7 @@ class Scene extends ThreeScene {
     this.player = new Player({ camera, dom, xr: renderer.xr });
     this.add(this.player);
 
-    this.ambient = new Ambient(this.player.head.context.state === 'running');
+    this.music = new Music(this.player.head.context.state === 'running');
     this.sfx = new SFX({ listener: this.player.head });
     this.pointables = [];
     this.router = router;
@@ -42,7 +42,6 @@ class Scene extends ThreeScene {
 
   load(world, options = {}) {
     const {
-      ambient,
       player,
       pointables,
       worlds,
@@ -55,7 +54,6 @@ class Scene extends ThreeScene {
     }
     this.background = null;
     this.fog = null;
-    ambient.set(null);
     player.desktopControls.reset();
     player.detachAll();
     pointables.length = 0;
@@ -68,12 +66,10 @@ class Scene extends ThreeScene {
 
   onAnimationTick({ animation, camera }) {
     const {
-      ambient,
       player,
       pointables,
       world,
     } = this;
-    ambient.onAnimationTick(animation);
     player.onAnimationTick({
       animation,
       camera,
@@ -92,11 +88,11 @@ class Scene extends ThreeScene {
   }
 
   resumeAudio() {
-    const { ambient, player: { head: { context } }, world } = this;
+    const { music, player: { head: { context } }, world } = this;
     if (context.state === 'suspended') {
       context.resume();
     }
-    ambient.resume();
+    music.resume();
     if (world && world.resumeAudio) {
       world.resumeAudio();
     }

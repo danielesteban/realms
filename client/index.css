@@ -251,14 +251,82 @@ body.pointerlock #discord {
   margin: 0.5rem 0;
 }
 
-.request {
+.music, .request {
   position: fixed;
-  bottom: 7rem;
-  right: 1rem;
-  padding: 0.75rem;
   border-radius: 4px;
   background: #111;
   border: 1px solid #000;
+}
+
+.music {
+  bottom: 0rem;
+  right: 6rem;
+  display: flex;
+}
+
+.music .image {
+  width: 100px;
+  height: 100px;
+  vertical-align: middle;
+}
+
+.music .wrapper {
+  width: 220px;
+  padding: 0.4rem 0.75rem;
+}
+
+.music .artist, .music .title {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.music .artist {
+  color: #eee;
+  font-size: 1.2em;
+  margin-bottom: 0.25rem;
+}
+
+.music .title {
+  color: #aaa;
+}
+
+.music .playhead {
+  height: 3px;
+  margin: 0.5rem 0px;
+  background-color: #333;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.music .playhead > div {
+  width: 0;
+  height: 100%;
+  background-color: #393;
+}
+
+.music .controls {
+  display: flex;
+  align-items: center;
+}
+
+.music .controls > button {
+  margin-right: 0.25rem;
+}
+
+.music .controls .time {
+  margin-left: auto;
+}
+
+body.pointerlock .music {
+  display: none;
+}
+
+.request {
+  bottom: 7rem;
+  right: 1rem;
+  padding: 0.75rem;
 }
 
 .request .actions {
