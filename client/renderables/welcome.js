@@ -22,7 +22,7 @@ class Welcome {
       'This is an alpha test for a second iteration of realmsvr. Which was an old webvr project of mine that prolly some of you remember from the supermedium era and the OG vive.',
       'It\'s a voxel editor with a recursive twist. It lets your create infinite voxel dioramas with your buddies for desktop and VR.',
       'Every realm is public but only it\'s creator can edit it. You can also create copies of them that you can modify and there\'s even anonymous realms that everybody can edit for those of you hesitant of creating an account.',
-      'It\'s also multiplayer. If the owner is online you can ask him for permission to edit just by clicking on the voxels. Or you can just make your own copy anytime as well.',
+      'It\'s also multiplayer. If the owner is online you can ask for permission to edit just by clicking on the voxels. Or you can just make your own copy anytime as well.',
       'During this alpha I\'m mainly focusing on getting a great desktop experience and the editor so... The VR support is just for PC-VR and it doesn\'t have the editing tools yet. I plan to implement the VR UI and optimize it for devices like the Oculus Quest during the next updates, though.',
       'You can drop me a <a style="color:inherit" href="https://twitter.com/DaniGatunes" rel="noopener noreferrer" target="_blank">tweet</a> if you have any suggestions or if you find any bugs.',
       'If you like this and/or think is somehow important that I keep developing it, please consider becoming a sponsor by clicking on the ribbon at the top right corner.',
