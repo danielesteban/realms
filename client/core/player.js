@@ -137,7 +137,7 @@ class Player extends Group {
       xr,
     });
     {
-      const key = 'realmsvr::skin';
+      const key = 'realms::skin';
       let skin = localStorage.getItem(key);
       if (!skin) {
         skin = Head.generateTexture().toDataURL();

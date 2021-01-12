@@ -3,7 +3,7 @@
 
 [![screenshot](screenshot.png)](https://realms.gatunes.com/)
 
-> An updated webxr port of realmsvr
+> A second iteration of realmsvr
 
 #### Live deployment
 

@@ -22,7 +22,7 @@ module.exports = {
   },
   mongoURI: (
     process.env.MONGO_URI
-    || `mongodb://localhost/realmsvr${test ? '-test' : ''}`
+    || `mongodb://localhost/realms${test ? '-test' : ''}`
   ),
   port: test ? 0 : (process.env.PORT || 8080),
   production,

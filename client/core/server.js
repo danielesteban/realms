@@ -4,7 +4,7 @@ class Server extends EventDispatcher {
   constructor(baseURL) {
     super();
     this.baseURL = baseURL;
-    const session = localStorage.getItem('realmsvr::session');
+    const session = localStorage.getItem('realms::session');
     if (session) {
       this.setSession(session);
       this.request({
@@ -145,10 +145,10 @@ class Server extends EventDispatcher {
     if (session) {
       const { iat, exp, ...profile } = JSON.parse(atob(session.split('.')[1]));
       this.profile = profile;
-      localStorage.setItem('realmsvr::session', session);
+      localStorage.setItem('realms::session', session);
     } else {
       delete this.profile;
-      localStorage.removeItem('realmsvr::session', session);
+      localStorage.removeItem('realms::session', session);
     }
     if (previous !== (this.profile && this.profile._id)) {
       this.dispatchEvent({ type: 'session' });
