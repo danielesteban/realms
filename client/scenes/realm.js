@@ -26,10 +26,6 @@ class Realm extends Group {
     this.worker = new Worker('./core/worker/main.js', { type: 'module' });
     this.worker.addEventListener('message', this.onWorkerMessage.bind(this));
 
-    this.player = player;
-    // this.pointables = pointables;
-    this.router = router;
-    this.server = server;
     this.room = new Room({
       onInit: this.onInit.bind(this),
       onPeerMessage: this.onPeerMessage.bind(this),
@@ -42,24 +38,24 @@ class Realm extends Group {
 
     this.ui = new RealmUI();
     this.ui.addEventListener('button', ({ id }) => {
-      this.player.unlock();
+      player.unlock();
       switch (id) {
         case 'create':
         case 'fork':
           if (!this.config) {
             return;
           }
-          this.server.request({
+          server.request({
             endpoint: id === 'fork' ? `realm/${this.config._id}/fork` : 'realm',
             method: 'POST',
           })
             .then((slug) => router.push(`/${slug}`));
           break;
         case 'session':
-          if (this.server.session) {
-            this.server.logout();
+          if (server.session) {
+            server.logout();
           } else {
-            this.server.showDialog('session');
+            server.showDialog('session');
           }
           break;
         case 'menu':
@@ -89,7 +85,12 @@ class Realm extends Group {
         Voxels.updateLighting({ [id]: value });
       }
     });
-    this.player.attach(this.ui, 'left');
+    player.attach(this.ui, 'left');
+
+    this.player = player;
+    // this.pointables = pointables;
+    this.router = router;
+    this.server = server;
   }
 
   onAnimationTick({ animation, camera }) {
