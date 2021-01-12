@@ -13,13 +13,13 @@ import UI from '../renderables/ui.js';
 import Welcome from '../renderables/welcome.js';
 
 class Menu extends Group {
-  constructor(scene) {
+  constructor(world) {
     super();
 
-    const { player, pointables, router, server } = scene;
+    const { player, pointables, router, server } = world;
 
-    scene.background = new Color(0x010A1A);
-    scene.fog = new FogExp2(scene.background.clone(), 0.075);
+    world.background = new Color(0x010A1A);
+    world.fog = new FogExp2(world.background.clone(), 0.075);
     player.desktopControls.speed = 3;
     player.teleport(new Vector3(0, 0, 0));
 

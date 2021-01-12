@@ -9,11 +9,13 @@ import RealmUI from '../renderables/realmUI.js';
 import Voxels from '../renderables/voxels.js';
 
 class Realm extends Group {
-  constructor(scene, { slug }) {
+  constructor(world, { slug }) {
     super();
 
-    scene.background = new Color(0);
-    scene.fog = new FogExp2(0, 0.02);
+    const { player, pointables, router, server } = world;
+
+    world.background = new Color(0);
+    world.fog = new FogExp2(0, 0.02);
 
     this.brush = {
       color: new Color(),
@@ -24,17 +26,17 @@ class Realm extends Group {
     this.worker = new Worker('./core/worker/main.js', { type: 'module' });
     this.worker.addEventListener('message', this.onWorkerMessage.bind(this));
 
-    this.player = scene.player;
-    this.pointables = scene.pointables;
-    this.router = scene.router;
-    this.server = scene.server;
+    this.player = player;
+    // this.pointables = pointables;
+    this.router = router;
+    this.server = server;
     this.room = new Room({
       onInit: this.onInit.bind(this),
       onPeerMessage: this.onPeerMessage.bind(this),
       onServerEvent: this.onServerEvent.bind(this),
       endpoint: `realm/${slug}`,
-      player: this.player,
-      server: scene.server,
+      player,
+      server,
     });
     this.add(this.room);
 
@@ -51,7 +53,7 @@ class Realm extends Group {
             endpoint: id === 'fork' ? `realm/${this.config._id}/fork` : 'realm',
             method: 'POST',
           })
-            .then((slug) => scene.router.push(`/${slug}`));
+            .then((slug) => router.push(`/${slug}`));
           break;
         case 'session':
           if (this.server.session) {
@@ -61,7 +63,7 @@ class Realm extends Group {
           }
           break;
         case 'menu':
-          scene.router.push('/');
+          router.push('/');
           break;
         default:
           break;
@@ -77,8 +79,8 @@ class Realm extends Group {
     });
     this.ui.addEventListener('input', ({ id, value }) => {
       if (id === 'background') {
-        scene.background.setHex(value);
-        scene.fog.color.setHex(value);
+        world.background.setHex(value);
+        world.fog.color.setHex(value);
       } if (id === 'brush') {
         this.brush.color.setHex(value);
       } else if (

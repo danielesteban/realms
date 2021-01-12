@@ -6,14 +6,14 @@ import {
   sRGBEncoding,
   WebGLRenderer,
 } from './three.js';
-import Scene from './scene.js';
+import World from './world.js';
 
 class Renderer {
   constructor({
     dom,
     router,
     server,
-    worlds,
+    scenes,
   }) {
     // Initialize state
     this.clock = new Clock();
@@ -44,12 +44,12 @@ class Renderer {
     window.addEventListener('resize', this.onResize.bind(this), false);
     this.onResize();
 
-    // Setup scene
-    this.scene = new Scene({
+    // Setup world
+    this.world = new World({
       renderer: this,
       router,
       server,
-      worlds,
+      scenes,
     });
 
     // Setup VR
@@ -68,7 +68,7 @@ class Renderer {
                 .then((session) => {
                   xr.setSession(session);
                   dom.enterVR.style.display = 'none';
-                  this.scene.resumeAudio();
+                  this.world.resumeAudio();
                   session.addEventListener('end', () => {
                     xr.setSession(null);
                     dom.enterVR.style.display = '';
@@ -88,7 +88,7 @@ class Renderer {
       dom,
       fps,
       renderer,
-      scene,
+      world,
     } = this;
 
     const animation = {
@@ -96,9 +96,9 @@ class Renderer {
       time: clock.oldTime / 1000,
     };
 
-    // Render scene
-    scene.player.updateMatrixWorld();
-    scene.onAnimationTick({
+    // Render world
+    world.player.updateMatrixWorld();
+    world.onAnimationTick({
       animation,
       camera: renderer.xr.enabled && renderer.xr.isPresenting ? (
         renderer.xr.getCamera(camera)
@@ -106,7 +106,7 @@ class Renderer {
         camera
       ),
     });
-    renderer.render(scene, camera);
+    renderer.render(world, camera);
 
     // Output debug info
     fps.count += 1;

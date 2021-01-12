@@ -1,11 +1,11 @@
-import { Scene as ThreeScene } from './three.js';
+import { Scene } from './three.js';
 import Music from './music.js';
 import Player from './player.js';
 import SFX from './sfx.js';
 
 // A VR scene base class
 
-class Scene extends ThreeScene {
+class World extends Scene {
   constructor({
     renderer: {
       camera,
@@ -15,7 +15,7 @@ class Scene extends ThreeScene {
     },
     router,
     server,
-    worlds,
+    scenes,
   }) {
     super();
 
@@ -29,7 +29,7 @@ class Scene extends ThreeScene {
     this.pointables = [];
     this.router = router;
     this.server = server;
-    this.worlds = worlds;
+    this.scenes = scenes;
 
     server.addEventListener('session', this.onSession.bind(this));
 
@@ -40,63 +40,63 @@ class Scene extends ThreeScene {
     document.addEventListener('mousedown', onFirstInteraction);
   }
 
-  load(world, options = {}) {
+  load(scene, options = {}) {
     const {
       player,
       pointables,
-      worlds,
+      scenes,
     } = this;
-    if (this.world) {
-      if (this.world.onUnload) {
-        this.world.onUnload();
+    if (this.scene) {
+      if (this.scene.onUnload) {
+        this.scene.onUnload();
       }
-      this.remove(this.world);
+      this.remove(this.scene);
     }
     this.background = null;
     this.fog = null;
     player.desktopControls.reset();
     player.detachAll();
     pointables.length = 0;
-    this.world = new worlds[world](this, options);
-    if (this.world.resumeAudio && player.head.context.state === 'running') {
-      this.world.resumeAudio();
+    this.scene = new scenes[scene](this, options);
+    if (this.scene.resumeAudio && player.head.context.state === 'running') {
+      this.scene.resumeAudio();
     }
-    this.add(this.world);
+    this.add(this.scene);
   }
 
   onAnimationTick({ animation, camera }) {
     const {
       player,
       pointables,
-      world,
+      scene,
     } = this;
     player.onAnimationTick({
       animation,
       camera,
       pointables,
     });
-    if (world && world.onAnimationTick) {
-      world.onAnimationTick({ animation, camera });
+    if (scene && scene.onAnimationTick) {
+      scene.onAnimationTick({ animation, camera });
     }
   }
 
   onSession() {
-    const { world } = this;
-    if (world && world.onSession) {
-      world.onSession();
+    const { scene } = this;
+    if (scene && scene.onSession) {
+      scene.onSession();
     }
   }
 
   resumeAudio() {
-    const { music, player: { head: { context } }, world } = this;
+    const { music, player: { head: { context } }, scene } = this;
     if (context.state === 'suspended') {
       context.resume();
     }
     music.resume();
-    if (world && world.resumeAudio) {
-      world.resumeAudio();
+    if (scene && scene.resumeAudio) {
+      scene.resumeAudio();
     }
   }
 }
 
-export default Scene;
+export default World;

@@ -1,7 +1,7 @@
 import Renderer from './core/renderer.js';
 import Router from './core/router.js';
 import Server from './core/server.js';
-import * as worlds from './worlds/index.js';
+import * as scenes from './scenes/index.js';
 
 const server = new Server(`https://${document.location.host}`);
 const router = new Router();
@@ -15,14 +15,14 @@ const renderer = new Renderer({
   },
   router,
   server,
-  worlds,
+  scenes,
 });
 
 router.addEventListener('update', ({ slug }) => {
   if (!slug) {
-    renderer.scene.load('Menu');
+    renderer.world.load('Menu');
     return;
   }
-  renderer.scene.load('Realm', { slug });
+  renderer.world.load('Realm', { slug });
 });
 router.update();
