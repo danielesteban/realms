@@ -146,8 +146,15 @@ class Menu extends Group {
       router,
     } = this;
     const { auxVector: wrap, position } = player;
+    const maxDistance = 6;
+    const distance = wrap.length(wrap.set(position.x, 0, position.z));
     wrap.set(0, 0, 0);
     if (position.y !== 0) wrap.y = -position.y;
+    if (distance > maxDistance) {
+      const scale = (distance - maxDistance) / distance;
+      wrap.x = -position.x * scale;
+      wrap.z = -position.z * scale;
+    }
     if (wrap.length()) {
       player.move(wrap);
     }
