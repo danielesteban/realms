@@ -19,7 +19,7 @@ module.exports = (app) => {
   }
   loadIndex();
 
-  app.use('/', express.static(clientPath));
+  app.use('/', express.static(clientPath, { maxAge: '10m' }));
 
   app.get('/:slug', [
     param('slug')
