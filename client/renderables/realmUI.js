@@ -58,10 +58,13 @@ class RealmUI extends Mesh {
     this.buttons = new Map();
     this.inputs = new Map();
     this.labels = new Map();
-    const button = (id, label) => {
+    const button = (id, label, isActive) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
       const button = document.createElement('button');
+      if (isActive) {
+        button.className = 'primary';
+      }
       button.style.width = '100%';
       button.innerText = label;
       button.onclick = () => {
@@ -143,11 +146,8 @@ class RealmUI extends Mesh {
 
     spacer();
 
+    button('menu', 'Browse realms', true);
     button('fork', 'Make a copy');
-
-    spacer();
-
-    button('menu', 'Browse realms');
     button('create', 'Create new');
     button('session', 'Sign-In');
 
@@ -160,6 +160,8 @@ class RealmUI extends Mesh {
     input('light4', 'LIGHT CHANNEL 4', 'color');
     input('background', 'BACKGROUND', 'color');
     input('ambient', 'AMBIENT LIGHT', 'color');
+    
+    spacer();
 
     const help = (text) => {
       const div = document.createElement('div');
@@ -168,7 +170,6 @@ class RealmUI extends Mesh {
       div.innerText = text;
       this.dom.appendChild(div);
     };
-    spacer();
     help('left click: place block');
     help('right click: remove block');
     help('middle click: pick block');

@@ -10,6 +10,7 @@ import Frame from '../renderables/frame.js';
 import Realm from '../renderables/realm.js';
 import Stand from '../renderables/stand.js';
 import UI from '../renderables/ui.js';
+import Welcome from '../renderables/welcome.js';
 
 class Menu extends Group {
   constructor(scene) {
@@ -43,7 +44,7 @@ class Menu extends Group {
           label: '<',
           isDisabled: true,
           pagination: 'prev',
-          onPointer: () => this.setPage(this.page - 1),
+          onPointer: () => this.setPage(Menu.page - 1),
         },
         {
           x: 172,
@@ -53,7 +54,7 @@ class Menu extends Group {
           label: '>',
           isDisabled: true,
           pagination: 'next',
-          onPointer: () => this.setPage(this.page + 1),
+          onPointer: () => this.setPage(Menu.page + 1),
         },
         {
           x: 16,
@@ -128,24 +129,13 @@ class Menu extends Group {
     this.add(ui);
     this.ui = ui;
 
-    const setFilter = (filter) => {
-      if (filter === 'user' && !server.session) {
-        player.unlock();
-        server.showDialog('session');
-        return;
-      }
-      this.filter = filter;
-      this.setPage(0);
-      ui.buttons.forEach((button) => {
-        button.isActive = button.filter === filter;
-      });
-      ui.draw();
-    };
     this.player = player;
     this.pointables = pointables;
     this.router = router;
     this.server = server;
-    setFilter('popular');
+    this.setFilter(Menu.filter, Menu.page);
+
+    Welcome.showDialog();
   }
 
   onAnimationTick({ animation }) {
@@ -198,15 +188,15 @@ class Menu extends Group {
     });
   }
 
-  setFilter(filter) {
+  setFilter(filter, page = 0) {
     const { player, server, ui } = this;
     if (filter === 'user' && !server.session) {
       player.unlock();
       server.showDialog('session');
       return;
     }
-    this.filter = filter;
-    this.setPage(0);
+    Menu.filter = filter;
+    this.setPage(page);
     ui.buttons.forEach((button) => {
       button.isActive = button.filter === filter;
     });
@@ -215,12 +205,12 @@ class Menu extends Group {
 
   setPage(page) {
     const {
-      filter,
       realms,
       server,
       ui,
     } = this;
-    this.page = page;
+    const { filter } = Menu;
+    Menu.page = page;
     realms.forEach((realm) => {
       realm.visible = false;
     });
@@ -277,5 +267,7 @@ class Menu extends Group {
     ui.dispose();
   }
 }
+
+Menu.filter = 'popular';
 
 export default Menu;

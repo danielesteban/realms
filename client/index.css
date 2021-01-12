@@ -227,6 +227,10 @@ body.pointerlock #discord {
   padding: 1rem;
 }
 
+.dialog.wide .wrapper  {
+  width: 520px;
+}
+
 .dialog .close {
   position: absolute;
   right: 0.75rem;
