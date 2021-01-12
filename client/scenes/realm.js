@@ -15,7 +15,7 @@ class Realm extends Group {
     const { player, pointables, router, server } = world;
 
     world.background = new Color(0);
-    world.fog = new FogExp2(0, 0.02);
+    world.fog = new FogExp2(0, navigator.userAgent.includes('Mobile') ? 0.03 : 0.02);
 
     this.brush = {
       color: new Color(),
@@ -88,7 +88,7 @@ class Realm extends Group {
     player.attach(this.ui, 'left');
 
     this.player = player;
-    // this.pointables = pointables;
+    this.pointables = pointables;
     this.router = router;
     this.server = server;
   }
@@ -220,14 +220,10 @@ class Realm extends Group {
         depth: meta.depth,
         maxLight: 16,
         chunkSize: 32,
-        // This is prolly to crazy for quest one
-        // It seems to work fine with something like 3
-        // As long as I scaled the fog.. Will see.
-        renderRadius: 4,
+        renderRadius: navigator.userAgent.includes('Mobile') ? 3 : 4,
       };
       Voxels.setupOffsets(this.config);
-      // Disable VR controls until I got the UI working
-      // this.pointables.push(...Voxels.intersects);
+      this.pointables.push(...Voxels.intersects);
       this.worker.postMessage({
         type: 'init',
         config: this.config,

@@ -225,6 +225,8 @@ body.pointerlock #discord {
   border-radius: 4px;
   width: 320px;
   padding: 1rem;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 .dialog.wide .wrapper  {
