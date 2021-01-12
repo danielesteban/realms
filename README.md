@@ -1,7 +1,7 @@
 [Realms](https://realms.gatunes.com/)
 ==
 
-[![screenshot](screenshot.png)](https://realms.gatunes.com/)
+[![screenshot](client/screenshot.png)](https://realms.gatunes.com/)
 
 > A second iteration of realmsvr
 
