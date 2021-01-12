@@ -4,7 +4,7 @@ import SimplePeer from './simplepeer.js';
 import { Group } from './three.js';
 import Peer from '../renderables/peer.js';
 
-class Peers extends Group {
+class Room extends Group {
   constructor({
     endpoint,
     onInit,
@@ -192,11 +192,16 @@ class Peers extends Group {
     this.reset();
   }
 
+  reconnect() {
+    this.disconnect();
+    this.connectToServer();
+  }
+
   onMessage({ data: buffer }) {
     const { peers, socket } = this;
     let event;
     try {
-      event = Peers.decode(new Uint8Array(buffer));
+      event = Room.decode(new Uint8Array(buffer));
     } catch (e) {
       return;
     }
@@ -290,7 +295,7 @@ class Peers extends Group {
 
   serverRequest(message) {
     const { socket } = this;
-    socket.send(Peers.encode(message));
+    socket.send(Room.encode(message));
   }
 
   reset() {
@@ -326,4 +331,4 @@ class Peers extends Group {
   }
 }
 
-export default Peers;
+export default Room;

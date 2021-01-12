@@ -45,15 +45,15 @@ class DesktopControls {
     this.onMouseWheel = this.onMouseWheel.bind(this);
     this.onPointerLock = this.onPointerLock.bind(this);
     this.requestPointerLock = this.requestPointerLock.bind(this);
-    window.addEventListener('blur', this.onBlur);
-    document.addEventListener('keydown', this.onKeyDown);
-    document.addEventListener('keyup', this.onKeyUp);
-    document.addEventListener('mousedown', this.onMouseDown);
-    document.addEventListener('mousemove', this.onMouseMove);
-    document.addEventListener('mouseup', this.onMouseUp);
-    document.addEventListener('mousewheel', this.onMouseWheel);
-    document.addEventListener('pointerlockchange', this.onPointerLock);
-    renderer.addEventListener('mousedown', this.requestPointerLock);
+    window.addEventListener('blur', this.onBlur, false);
+    document.addEventListener('keydown', this.onKeyDown, false);
+    document.addEventListener('keyup', this.onKeyUp, false);
+    document.addEventListener('mousedown', this.onMouseDown, false);
+    document.addEventListener('mousemove', this.onMouseMove, false);
+    document.addEventListener('mouseup', this.onMouseUp, false);
+    document.addEventListener('mousewheel', this.onMouseWheel, false);
+    document.addEventListener('pointerlockchange', this.onPointerLock, false);
+    renderer.addEventListener('mousedown', this.requestPointerLock, false);
   }
 
   dispose() {

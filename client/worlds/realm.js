@@ -4,7 +4,7 @@ import {
   Group,
   Vector3,
 } from '../core/three.js';
-import Peers from '../core/peers.js';
+import Room from '../core/room.js';
 import RealmUI from '../renderables/realmUI.js';
 import Voxels from '../renderables/voxels.js';
 
@@ -28,7 +28,7 @@ class Realm extends Group {
     this.pointables = scene.pointables;
     this.router = scene.router;
     this.server = scene.server;
-    this.peers = new Peers({
+    this.room = new Room({
       onInit: this.onInit.bind(this),
       onPeerMessage: this.onPeerMessage.bind(this),
       onServerEvent: this.onServerEvent.bind(this),
@@ -36,7 +36,7 @@ class Realm extends Group {
       player: this.player,
       server: scene.server,
     });
-    this.add(this.peers);
+    this.add(this.room);
 
     this.ui = new RealmUI();
     this.ui.addEventListener('button', ({ id }) => {
@@ -69,7 +69,7 @@ class Realm extends Group {
     });
     this.ui.addEventListener('change', ({ id, value }) => {
       if (id !== 'brush') {
-        this.peers.serverRequest({
+        this.room.serverRequest({
           type: 'META',
           json: { [id]: value },
         });
@@ -95,8 +95,8 @@ class Realm extends Group {
       brush,
       chunks,
       config,
-      peers,
       player,
+      room,
     } = this;
 
     if (!config) {
@@ -114,7 +114,7 @@ class Realm extends Group {
     if (wrap.length()) {
       player.move(wrap);
     }
-    peers.animate(animation);
+    room.animate(animation);
 
     Voxels.updateOffsets(camera);
     chunks.forEach((chunk) => {
@@ -194,7 +194,7 @@ class Realm extends Group {
                       type: 'update',
                       voxel,
                     });
-                    this.peers.serverRequest({
+                    this.room.serverRequest({
                       type: 'VOXEL',
                       json: voxel,
                     });
@@ -253,15 +253,13 @@ class Realm extends Group {
   }
 
   onSession() {
-    const { peers } = this;
+    const { room } = this;
     // Force reload when session changes
-    if (peers.socket) {
-      peers.socket.close();
-    }
+    room.reconnect();
   }
 
   onPeerMessage({ peer, message }) {
-    const { peers, ui } = this;
+    const { room, ui } = this;
     if (message instanceof Uint8Array) {
       return;
     }
@@ -270,7 +268,7 @@ class Realm extends Group {
         ui.showRequest({
           name: message.name,
           onAllow: () => (
-            peers.serverRequest({
+            room.serverRequest({
               type: 'ALLOW',
               json: { peer: peer.peer },
             })
@@ -346,21 +344,21 @@ class Realm extends Group {
   onUnload() {
     const {
       chunks,
-      peers,
+      room,
       worker,
       ui,
     } = this;
     chunks.forEach((chunk) => chunk.dispose());
-    peers.disconnect();
+    room.disconnect();
     worker.terminate();
     ui.dispose();
   }
 
   requestEdit() {
-    const { peers, server } = this;
-    const creator = peers.peers.find(({ isCreator }) => (isCreator));
+    const { room, server } = this;
+    const creator = room.peers.find(({ isCreator }) => (isCreator));
     if (creator) {
-      peers.broadcast({
+      room.broadcast({
         type: 'edit',
         name: server.session ? server.profile.name : 'Anonymous',
       }, { include: creator.peer });

@@ -56,33 +56,28 @@ class Renderer {
     if (navigator.xr) {
       const { xr } = this.renderer;
       xr.enabled = true;
-      dom.renderer.addEventListener('mousedown', () => {
-        if (xr.isPresenting) return;
-        navigator.xr.requestSession('immersive-vr', {
-          optionalFeatures: ['local-floor', 'bounded-floor'],
-        })
-          .then((session) => {
-            xr.setSession(session);
-            dom.enterVR.style.display = 'none';
-            this.scene.resumeAudio();
-            session.addEventListener('end', () => {
-              xr.setSession(null);
-              dom.enterVR.style.display = '';
-            });
-          })
-          .catch(() => {});
-      }, false);
-      dom.support.className = 'supported';
-      dom.support.innerText = 'webxr is supported';
       navigator.xr.isSessionSupported('immersive-vr')
         .then((supported) => {
           if (supported) {
             dom.enterVR.style.display = '';
+            dom.renderer.addEventListener('mousedown', () => {
+              if (xr.isPresenting) return;
+              navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor'],
+              })
+                .then((session) => {
+                  xr.setSession(session);
+                  dom.enterVR.style.display = 'none';
+                  this.scene.resumeAudio();
+                  session.addEventListener('end', () => {
+                    xr.setSession(null);
+                    dom.enterVR.style.display = '';
+                  });
+                })
+                .catch(() => {});
+            }, false);
           }
         });
-    } else {
-      dom.support.className = 'unsupported';
-      dom.support.innerText = 'webxr is not supported';
     }
   }
 
