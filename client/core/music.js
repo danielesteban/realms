@@ -58,11 +58,11 @@ class Music {
     const controls = document.createElement('div');
     controls.className = 'controls';
     const toggle = document.createElement('button');
-    toggle.innerText = 'Play';
+    toggle.innerText = '▶';
     toggle.addEventListener('click', this.togglePlayback.bind(this));
     controls.appendChild(toggle);
     const next = document.createElement('button');
-    next.innerText = 'Next';
+    next.innerText = '>>';
     next.addEventListener('click', this.next.bind(this));
     controls.appendChild(next);
     const time = document.createElement('div');
@@ -115,7 +115,7 @@ class Music {
         player.src = `${track.stream_url}?${clientId}`;
         if (isRunning) {
           player.play();
-          ui.toggle.innerText = 'Pause';
+          ui.toggle.innerText = '❚❚';
         }
       })
       .catch(() => (
@@ -146,13 +146,13 @@ class Music {
     const { player, ui } = this;
     this.isRunning = true;
     player.play();
-    ui.toggle.innerText = 'Pause';
+    ui.toggle.innerText = '❚❚';
     ui.wrapper.style.display = '';
   }
 
   togglePlayback() {
     const { player, ui } = this;
-    ui.toggle.innerText = player.paused ? 'Pause' : 'Play';
+    ui.toggle.innerText = player.paused ? '❚❚' : '▶';
     if (player.paused) {
       player.play();
     } else {

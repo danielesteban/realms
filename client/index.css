@@ -277,7 +277,7 @@ body.pointerlock #discord {
 }
 
 .music .wrapper {
-  width: 220px;
+  width: 170px;
   padding: 0.4rem 0.75rem;
 }
 
@@ -318,7 +318,14 @@ body.pointerlock #discord {
 }
 
 .music .controls > button {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   margin-right: 0.25rem;
+  width: 40px;
+  height: 30px;
 }
 
 .music .controls .time {
