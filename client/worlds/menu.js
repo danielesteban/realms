@@ -79,14 +79,32 @@ class Menu extends Group {
           y: 196,
           width: 224,
           height: 44,
-          label: 'Your Realms',
+          label: 'Your realms',
           filter: 'user',
           onPointer: () => this.setFilter('user'),
         },
+        {
+          x: 16,
+          y: 256,
+          width: 224,
+          height: 44,
+          label: 'Create new',
+          onPointer: () => (
+            server.request({
+              endpoint: 'realm',
+              method: 'POST',
+            })
+              .then((slug) => router.push(`/${slug}`))
+          ),
+        },
       ],
       graphics: [({ ctx }) => {
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, 256, 60);
+        ctx.strokeStyle = '#000';
+        ctx.moveTo(0, 60);
+        ctx.lineTo(256, 60);
+        ctx.stroke();
       }],
       labels: [
         {
@@ -96,6 +114,8 @@ class Menu extends Group {
           pagination: true,
         },
       ],
+      height: 0.49375,
+      textureHeight: 316,
     });
     ui.add(new Frame());
     const stand = new Stand();
@@ -239,7 +259,7 @@ class Menu extends Group {
             button.isDisabled = page === 0;
           }
           if (button.pagination === 'next') {
-            button.isDisabled = page + 1 === pages;
+            button.isDisabled = page + 1 >= pages;
           }
         });
         ui.labels.forEach((label) => {

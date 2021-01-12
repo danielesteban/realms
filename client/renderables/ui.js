@@ -29,7 +29,7 @@ class UI extends Mesh {
       UI.setupGeometry();
     }
     styles = {
-      background: '#000',
+      background: '#222',
       color: '#fff',
       font: '700 18px monospace',
       textAlign: 'center',
@@ -47,7 +47,7 @@ class UI extends Mesh {
           ...(styles.button && styles.button.active ? styles.button.active : {}),
         },
         disabled: {
-          background: '#555',
+          background: '#222',
           border: '#000',
           color: '#777',
           ...(styles.button && styles.button.disabled ? styles.button.disabled : {}),
