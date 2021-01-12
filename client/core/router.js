@@ -9,13 +9,6 @@ class Router extends EventDispatcher {
     window.addEventListener('popstate', this.update.bind(this));
   }
 
-  init() {
-    if (location.hash) {
-      history.replaceState({}, '', location.hash.substr(1));
-    }
-    this.update();
-  }
-
   push(path) {
     if (location.pathname !== path) {
       history.pushState({}, '', path);

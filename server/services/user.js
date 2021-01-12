@@ -16,7 +16,7 @@ module.exports.authenticateWithGoogle = (req, res) => {
         (err || !user) ? (
           'err:1'
         ) : (
-          `session:${JSON.stringify(user.issueToken())}`
+          `${user.firstLogin ? 'firstLogin: 1, ' : ''}session:${JSON.stringify(user.issueToken())}`
         )
       )}},origin);`
       + 'window.close()'
@@ -26,40 +26,6 @@ module.exports.authenticateWithGoogle = (req, res) => {
     );
   })(req, res);
 };
-
-module.exports.getPhoto = [
-  param('user')
-    .isMongoId(),
-  checkValidationResult,
-  (req, res, next) => {
-    User
-      .findOne({
-        _id: req.params.user,
-        photo: { $exists: true },
-      })
-      .select('updatedAt')
-      .then((user) => {
-        if (!user) {
-          throw notFound();
-        }
-        const lastModified = user.updatedAt.toUTCString();
-        if (req.get('if-modified-since') === lastModified) {
-          return res.status(304).end();
-        }
-        return User
-          .findById(user._id)
-          .select('-_id photo')
-          .then(({ photo }) => (
-            res
-              .set('Cache-Control', 'must-revalidate')
-              .set('Content-Type', 'image/jpeg')
-              .set('Last-Modified', lastModified)
-              .send(photo)
-          ));
-      })
-      .catch(next);
-  },
-];
 
 module.exports.login = [
   body('email')
@@ -111,6 +77,20 @@ module.exports.register = [
     });
     user.save()
       .then(() => res.json(user.issueToken()))
+      .catch(() => res.status(500).end());
+  },
+];
+
+module.exports.updateProfile = [
+  body('name')
+    .not().isEmpty()
+    .isLength({ min: 1, max: 25 })
+    .trim(),
+  checkValidationResult,
+  (req, res) => {
+    req.user.name = req.body.name;
+    req.user.save()
+      .then(() => res.json(req.user.issueToken()))
       .catch(() => res.status(500).end());
   },
 ];

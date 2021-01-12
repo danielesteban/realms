@@ -1,8 +1,6 @@
 const bcrypt = require('bcrypt');
-const fetch = require('node-fetch');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const sharp = require('sharp');
 const config = require('../config');
 
 const UserSchema = new mongoose.Schema({
@@ -15,45 +13,25 @@ const UserSchema = new mongoose.Schema({
   },
   name: { type: String, required: true },
   password: String,
-  photo: Buffer,
 }, { timestamps: true });
 
 UserSchema.pre('save', function onSave(next) {
   const user = this;
-  const promises = [];
   if (user.isModified('password')) {
-    promises.push(
-      new Promise((resolve, reject) => (
-        bcrypt.genSalt(5, (err, salt) => {
-          if (err) return reject(err);
-          return bcrypt.hash(user.password, salt, (err, hash) => {
-            if (err) return reject(err);
-            user.password = hash;
-            return resolve();
-          });
-        })
-      ))
-    );
+    return bcrypt.genSalt(5, (err, salt) => {
+      if (err) {
+        return next(err);
+      }
+      return bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) {
+          return next(err);
+        }
+        user.password = hash;
+        return next();
+      });
+    });
   }
-  if (user.isModified('photo')) {
-    promises.push(
-      sharp(user.photo)
-        .rotate()
-        .resize(100, 100)
-        .jpeg({ quality: 85 })
-        .toBuffer()
-        .then((photo) => {
-          user.photo = photo;
-        })
-    );
-  }
-  if (!promises.length) {
-    return next();
-  }
-  return Promise
-    .all(promises)
-    .then(() => next())
-    .catch(next);
+  return next();
 });
 
 UserSchema.methods = {
@@ -90,20 +68,12 @@ UserSchema.statics = {
         if (user) {
           return user;
         }
-        const create = () => {
-          user = new User(doc);
-          user.photo = doc.photo;
-          return user.save();
-        };
-        if (doc.photo && typeof doc.photo === 'string') {
-          return fetch(doc.photo)
-            .then((res) => res.buffer())
-            .then((buffer) => {
-              doc.photo = buffer;
-              return create();
-            });
-        }
-        return create();
+        user = new User(doc);
+        return user.save()
+          .then(() => {
+            user.firstLogin = true;
+            return user;
+          });
       });
   },
   fromToken(token) {

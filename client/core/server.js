@@ -15,6 +15,7 @@ class Server extends EventDispatcher {
     }
     this.dialogs = {};
     this.setupRegisterDialog();
+    this.setupRegisterGoogleDialog();
     this.setupSessionDialog();
   }
 
@@ -57,7 +58,7 @@ class Server extends EventDispatcher {
       }
       win.postMessage(true, baseURL);
     }, 100);
-    const onMessage = ({ origin, data: { session } }) => {
+    const onMessage = ({ origin, data: { firstLogin, session } }) => {
       if (origin === baseURL) {
         window.removeEventListener('message', onMessage);
         clearInterval(watcher);
@@ -67,6 +68,10 @@ class Server extends EventDispatcher {
         }
         this.setSession(session);
         this.closeDialogs();
+        if (firstLogin) {
+          this.dialogs.registerGoogle.nameInput.value = this.profile.name;
+          this.showDialog('registerGoogle');
+        }
       }
     };
     window.addEventListener('message', onMessage, false);
@@ -84,6 +89,22 @@ class Server extends EventDispatcher {
       endpoint: 'user',
       body: { name, email, password },
       method: 'POST',
+    })
+      .then((session) => {
+        this.setSession(session);
+        this.closeDialogs();
+      })
+      .catch(() => {});
+  }
+
+  updateProfile({ name }) {
+    if (!name) {
+      return;
+    }
+    this.request({
+      endpoint: 'user/profile',
+      body: { name },
+      method: 'PUT',
     })
       .then((session) => {
         this.setSession(session);
@@ -194,6 +215,46 @@ class Server extends EventDispatcher {
     dialog.appendChild(wrapper);
     document.body.appendChild(dialog);
     this.dialogs.register = dialog;
+  }
+
+  setupRegisterGoogleDialog() {
+    // This is maybe nuts.. but I'm feeling nostalgic today.
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'wrapper';
+    const close = document.createElement('div');
+    close.className = 'close';
+    close.innerText = '×';
+    close.addEventListener('click', () => this.closeDialogs());
+    wrapper.appendChild(close);
+
+    const form = document.createElement('form');
+    const nameLabel = document.createElement('label');
+    nameLabel.innerText = 'Name';
+    form.appendChild(nameLabel);
+    const name = document.createElement('input');
+    name.type = 'text';
+    form.appendChild(name);
+    dialog.nameInput = name;
+    const submitWrapper = document.createElement('div');
+    submitWrapper.className = 'submit';
+    const submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.innerText = 'Save';
+    submitWrapper.appendChild(submit);
+    form.appendChild(submitWrapper);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.updateProfile({
+        name: name.value,
+      });
+    });
+    wrapper.appendChild(form);
+
+    dialog.appendChild(wrapper);
+    document.body.appendChild(dialog);
+    this.dialogs.registerGoogle = dialog;
   }
 
   setupSessionDialog() {

@@ -144,8 +144,12 @@ class RealmUI extends Mesh {
     spacer();
 
     button('fork', 'Make a copy');
-    button('create', 'Create new');
+
+    spacer();
+
     button('menu', 'Browse realms');
+    button('create', 'Create new');
+    button('session', 'Sign-In');
 
     spacer();
 
@@ -253,7 +257,7 @@ class RealmUI extends Mesh {
   }
 
   update(meta) {
-    const { auxColor, inputs, labels } = this;
+    const { auxColor, buttons, inputs, labels } = this;
     Object.keys(meta).forEach((key) => {
       if (inputs.has(key)) {
         const { input/* , canvas */ } = inputs.get(key);
@@ -289,6 +293,11 @@ class RealmUI extends Mesh {
         label.parentNode.style.display = meta.isCreator ? 'none' : '';
         // TODO: Update canvas counterpart
       }
+    }
+    if (meta.hasSession !== undefined) {
+      const { button/* , canvas */ } = buttons.get('session');
+      button.innerText = meta.hasSession ? 'Sign-Out' : 'Sign-In';
+      // TODO: Update canvas counterpart
     }
     this.draw();
   }

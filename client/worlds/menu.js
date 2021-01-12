@@ -36,10 +36,30 @@ class Menu extends Group {
     const ui = new UI({
       buttons: [
         {
-          x: 16,
+          x: 40,
           y: 16,
+          width: 44,
+          height: 44,
+          label: '<',
+          isDisabled: true,
+          pagination: 'prev',
+          onPointer: () => this.setPage(this.page - 1),
+        },
+        {
+          x: 172,
+          y: 16,
+          width: 44,
+          height: 44,
+          label: '>',
+          isDisabled: true,
+          pagination: 'next',
+          onPointer: () => this.setPage(this.page + 1),
+        },
+        {
+          x: 16,
+          y: 76,
           width: 224,
-          height: 48,
+          height: 44,
           label: 'Most popular',
           isActive: true,
           filter: 'popular',
@@ -47,43 +67,31 @@ class Menu extends Group {
         },
         {
           x: 16,
-          y: 80,
+          y: 136,
           width: 224,
-          height: 48,
+          height: 44,
           label: 'Latest',
           filter: 'latest',
           onPointer: () => this.setFilter('latest'),
         },
         {
           x: 16,
-          y: 140,
+          y: 196,
           width: 224,
-          height: 48,
+          height: 44,
           label: 'Your Realms',
           filter: 'user',
           onPointer: () => this.setFilter('user'),
         },
-        {
-          x: 64,
-          y: 200,
-          width: 48,
-          height: 40,
-          label: '<',
-          isDisabled: true,
-          pagination: 'prev',
-          onPointer: () => this.setPage(this.page - 1),
-        },
-        {
-          x: 144,
-          y: 200,
-          width: 48,
-          height: 40,
-          label: '>',
-          isDisabled: true,
-          pagination: 'next',
-          onPointer: () => this.setPage(this.page + 1),
-        },
       ],
+      labels: [
+        {
+          x: 128,
+          y: 39,
+          text: '...',
+          pagination: true,
+        },
+      ]
     });
     ui.add(new Frame());
     const stand = new Stand();
@@ -197,6 +205,11 @@ class Menu extends Group {
         button.isDisabled = true;
       }
     });
+    ui.labels.forEach((label) => {
+      if (label.pagination) {
+        label.text = '...';
+      }
+    });
     ui.draw();
     server.request({
       endpoint: `realms/${filter}/${page}`,
@@ -223,6 +236,11 @@ class Menu extends Group {
           }
           if (button.pagination === 'next') {
             button.isDisabled = page + 1 === pages;
+          }
+        });
+        ui.labels.forEach((label) => {
+          if (label.pagination) {
+            label.text = `${page} / ${pages}`;
           }
         });
         ui.draw();

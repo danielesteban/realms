@@ -19,10 +19,11 @@ class RealmRoom extends Room {
 
     client.isCreator = !!(
       client.user
+      && creator
       && creator._id.equals(client.user._id)
     );
 
-    client.canEdit = client.isCreator;
+    client.canEdit = !creator || client.isCreator;
 
     if (
       !client.isCreator
@@ -35,7 +36,7 @@ class RealmRoom extends Room {
     return {
       json: {
         ...meta,
-        creator: creator.name,
+        ...(creator ? { creator: creator.name } : {}),
         isCreator: client.isCreator,
         peers: clients.map(({ id, user }) => ({
           id,

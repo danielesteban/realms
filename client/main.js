@@ -3,7 +3,7 @@ import Router from './core/router.js';
 import Server from './core/server.js';
 import * as worlds from './worlds/index.js';
 
-const server = new Server('http://localhost:8081');
+const server = new Server(`https://${document.location.host}`);
 const router = new Router();
 const renderer = new Renderer({
   dom: {
@@ -25,4 +25,4 @@ router.addEventListener('update', ({ slug }) => {
   }
   renderer.scene.load('Realm', { slug });
 });
-router.init();
+router.update();

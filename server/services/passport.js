@@ -67,11 +67,8 @@ module.exports.setup = () => {
     const {
       displayName: name,
       emails,
-      photos,
     } = profile;
     const [email] = emails
-      .map(({ value }) => (value));
-    const [photo] = photos
       .map(({ value }) => (value));
     User
       .findOrCreate(
@@ -79,7 +76,6 @@ module.exports.setup = () => {
         {
           email,
           name,
-          photo,
         }
       )
       .then((user) => done(null, user))

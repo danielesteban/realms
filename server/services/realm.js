@@ -75,7 +75,7 @@ module.exports.create = [
     const height = 64;
     const depth = 64;
     const realm = new Realm({
-      creator: req.user._id,
+      ...(req.user ? { creator: req.user._id } : {}),
       name,
       width,
       height,
@@ -108,11 +108,17 @@ module.exports.fork = [
           throw notFound();
         }
         const fork = new Realm({
-          creator: req.user._id,
+          ...(req.user ? { creator: req.user._id } : {}),
           name: namor.generate({ words: 3, saltLength: 0 }),
           width: realm.width,
           height: realm.height,
           depth: realm.depth,
+          ambient: realm.ambient,
+          background: realm.background,
+          light1: realm.light1,
+          light2: realm.light2,
+          light3: realm.light3,
+          light4: realm.light4,
           voxels: realm.voxels,
         });
         fork
@@ -166,7 +172,11 @@ module.exports.list = (filter) => ([
   (req, res, next) => {
     const { page } = req.params;
     const pageSize = 5;
-    const selector = filter === 'user' ? { creator: req.user._id } : {};
+    const selector = filter === 'user' ? (
+      { creator: req.user._id }
+    ) : (
+      { creator: { $exists: true } }
+    );
     let sorting;
     switch (filter) {
       default:

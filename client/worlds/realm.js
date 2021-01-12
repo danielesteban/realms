@@ -40,15 +40,11 @@ class Realm extends Group {
 
     this.ui = new RealmUI();
     this.ui.addEventListener('button', ({ id }) => {
+      this.player.unlock();
       switch (id) {
         case 'create':
         case 'fork':
           if (!this.config) {
-            return;
-          }
-          this.player.unlock();
-          if (!this.server.session) {
-            this.server.showDialog('session');
             return;
           }
           this.server.request({
@@ -56,6 +52,13 @@ class Realm extends Group {
             method: 'POST',
           })
             .then((slug) => scene.router.push(`/${slug}`));
+          break;
+        case 'session':
+          if (this.server.session) {
+            this.server.logout();
+          } else {
+            this.server.showDialog('session');
+          }
           break;
         case 'menu':
           scene.router.push('/');
@@ -234,7 +237,7 @@ class Realm extends Group {
         )
       );
     }
-    this.config.canEdit = meta.isCreator;
+    this.config.canEdit = !meta.creator || meta.isCreator;
 
     this.worker.postMessage({
       type: 'load',
@@ -243,7 +246,9 @@ class Realm extends Group {
 
     this.ui.update({
       ...meta,
+      creator: meta.creator || 'Anonymous',
       canEdit: this.config.canEdit,
+      hasSession: !!this.server.session,
     });
   }
 

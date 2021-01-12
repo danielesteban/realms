@@ -1,24 +1,24 @@
-[Recursive](https://recursive.gatunes.com/)
+[Realms](https://realms.gatunes.com/)
 ==
 
-[![screenshot](screenshot.png)](https://recursive.gatunes.com/)
+[![screenshot](screenshot.png)](https://realms.gatunes.com/)
 
-> A webxr port of realmsvr
+> An updated webxr port of realmsvr
 
 #### Live deployment
 
-[https://recursive.gatunes.com/](https://recursive.gatunes.com/)
+[https://realms.gatunes.com/](https://realms.gatunes.com/)
 
 
 #### Local development
 
 ```bash
 # clone this repo
-git clone https://github.com/danielesteban/recursive.git
-cd recursive
+git clone https://github.com/danielesteban/realms.git
+cd realms/server
 # install dependencies
 npm install
 # start the dev environment:
 npm start
-# open https://localhost:5000/ in your browser
+# open https://localhost:8080/ in your browser
 ```

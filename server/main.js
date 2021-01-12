@@ -1,5 +1,4 @@
 const bodyParser = require('body-parser');
-const cors = require('cors');
 const express = require('express');
 const expressWS = require('express-ws');
 const fs = require('fs');
@@ -7,8 +6,8 @@ const helmet = require('helmet');
 const http = require('http');
 const https = require('https');
 const mongoose = require('mongoose');
-const multer = require('multer');
 const config = require('./config');
+const setupClient = require('./services/client');
 const setupEndpoints = require('./endpoints');
 const { setup: setupErrorHandler } = require('./services/errorHandler');
 const { setup: setupPassport } = require('./services/passport');
@@ -27,20 +26,13 @@ const app = express();
 const server = (process.env.TLS_KEY && process.env.TLS_CERT ? https : http).createServer({
   key: process.env.TLS_KEY ? fs.readFileSync(process.env.TLS_KEY) : undefined,
   cert: process.env.TLS_CERT ? fs.readFileSync(process.env.TLS_CERT) : undefined,
-}, app).listen(process.env.PORT || 8081, () => (
+}, app).listen(config.port, () => (
   console.log(`Listening on port: ${server.address().port}`)
 ));
 app.set('trust proxy', 'loopback');
-app.set('multer', multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 1048576, // 1mb
-  },
-}));
 app.use(bodyParser.json({
   limit: '1mb',
 }));
-app.use(cors({ origin: config.clientOrigin }));
 if (config.production) {
   app.use(helmet({
     contentSecurityPolicy: false,
@@ -49,6 +41,7 @@ if (config.production) {
 expressWS(app, server, { clientTracking: false });
 setupPassport();
 setupEndpoints(app);
+setupClient(app);
 setupErrorHandler(app);
 
 // Graceful shutdown

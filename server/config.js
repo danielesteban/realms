@@ -14,17 +14,17 @@ if (
 }
 
 module.exports = {
-  clientOrigin: process.env.CLIENT_ORIGIN || 'https://localhost:5000',
+  clientOrigin: process.env.CLIENT_ORIGIN || 'https://localhost:8080',
   googleAuth: {
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_AUTH_CALLBACK || 'http://localhost:8081/user/google/authenticate',
+    callbackURL: process.env.GOOGLE_AUTH_CALLBACK || 'https://localhost:8080/user/google/authenticate',
   },
   mongoURI: (
     process.env.MONGO_URI
     || `mongodb://localhost/realmsvr${test ? '-test' : ''}`
   ),
-  port: test ? 0 : (process.env.PORT || 8081),
+  port: test ? 0 : (process.env.PORT || 8080),
   production,
   sessionSecret,
   test,

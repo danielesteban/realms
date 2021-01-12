@@ -1,5 +1,5 @@
 const nocache = require('nocache');
-const { authenticateWS, requireAuth } = require('./services/passport');
+const { authenticate, authenticateWS, requireAuth } = require('./services/passport');
 const realm = require('./services/realm');
 const user = require('./services/user');
 
@@ -17,14 +17,14 @@ module.exports = (api) => {
   api.post(
     '/realm',
     preventCache,
-    requireAuth,
+    authenticate,
     realm.create
   );
 
   api.post(
     '/realm/:id/fork',
     preventCache,
-    requireAuth,
+    authenticate,
     realm.fork
   );
 
@@ -75,6 +75,13 @@ module.exports = (api) => {
     user.refreshSession
   );
 
+  api.put(
+    '/user/profile',
+    preventCache,
+    requireAuth,
+    user.updateProfile
+  );
+
   api.get(
     '/user/google',
     preventCache,
@@ -85,10 +92,5 @@ module.exports = (api) => {
     '/user/google/authenticate',
     preventCache,
     user.authenticateWithGoogle
-  );
-
-  api.get(
-    '/user/:user/photo',
-    user.getPhoto
   );
 };
