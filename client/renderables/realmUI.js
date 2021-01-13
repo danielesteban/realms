@@ -77,6 +77,46 @@ class RealmUI extends Mesh {
       this.drawList.push(canvas);
       this.buttons.set(id, { button, canvas });
     };
+    const buttonGroup = (id, label, buttons) => {
+      const div = document.createElement('div');
+      div.style.marginBottom = '0.25rem';
+      const name = document.createElement('div');
+      name.appendChild(document.createTextNode(label));
+      div.appendChild(name);
+      const wrapper = document.createElement('div');
+      wrapper.style.margin = '0.25rem 0';
+      wrapper.style.display = 'flex';
+      const group = buttons.map((lines, i) => {
+        const button = document.createElement('button');
+        button.style.width = '100%';
+        button.style.borderRadius = '0';
+        button.style.fontSize = '0.6rem';
+        button.style.padding = '0.2rem';
+        if (i === 0) {
+          button.className = 'primary';
+        } else {
+          button.style.borderLeft = '1px solid #111';
+        }
+        button.onclick = () => {
+          group.forEach(({ button: b }) => { b.className = ''; });
+          button.className = 'primary';
+          this.dispatchEvent({ type: 'button', id, index: i });
+        };
+        lines.forEach((line) => {
+          const div = document.createElement('div');
+          div.appendChild(document.createTextNode(line));
+          button.appendChild(div);
+        });
+        // TODO: Create canvas counterpart
+        const canvas = { todo: 'Button on canvas' };
+        this.drawList.push(canvas);
+        wrapper.appendChild(button);
+        return { button, canvas };
+      });
+      div.appendChild(wrapper);
+      this.dom.appendChild(div);
+      this.buttons.set(id, group);
+    };
     const input = (id, label, type) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
@@ -116,14 +156,13 @@ class RealmUI extends Mesh {
     };
     const label = (id, text) => {
       const div = document.createElement('div');
-      div.style.marginBottom = '0.25rem';
       const name = document.createElement('div');
       name.appendChild(document.createTextNode(text));
+      div.appendChild(name);
       const label = document.createElement('div');
       label.style.color = '#999';
       label.style.marginTop = '0.125rem';
       label.innerHTML = '&nbsp;';
-      div.appendChild(name);
       div.appendChild(label);
       this.dom.appendChild(div);
       // TODO: Create canvas counterpart
@@ -141,7 +180,7 @@ class RealmUI extends Mesh {
     };
 
     input('name', 'TITLE', 'text');
-    label('name', 'TITLE');
+    label('name', 'TITLE', '');
     label('creator', 'CREATOR');
 
     spacer();
@@ -154,6 +193,13 @@ class RealmUI extends Mesh {
     spacer();
 
     input('brush', 'BRUSH', 'color');
+    buttonGroup('blockType', 'TYPE', [
+      ['1', 'Block'],
+      ['2', 'Light1'],
+      ['3', 'Light2'],
+      ['4', 'Light3'],
+      ['5', 'Light4'],
+    ]);
     input('light1', 'LIGHT CHANNEL 1', 'color');
     input('light2', 'LIGHT CHANNEL 2', 'color');
     input('light3', 'LIGHT CHANNEL 3', 'color');
@@ -283,6 +329,12 @@ class RealmUI extends Mesh {
         // TODO: Update canvas counterpart
       }
     });
+    if (meta.blockType !== undefined) {
+      buttons.get('blockType').forEach(({ button/* , canvas */ }, i) => {
+        button.className = meta.blockType === i  ? 'primary' : '';
+        // TODO: Update canvas counterpart
+      });
+    }
     if (meta.canEdit !== undefined) {
       [...inputs.entries()].forEach(([id, { input/* , canvas */ }]) => {
         const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;

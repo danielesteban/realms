@@ -166,6 +166,7 @@ class DesktopControls {
       case 52:
       case 53:
         brush.type = keyCode - 49;
+        brush.needsUpdate = true;
         break;
       default:
         break;
@@ -244,6 +245,7 @@ class DesktopControls {
   onMouseWheel({ deltaY }) {
     const { brush } = this;
     brush.size = Math.min(Math.max(brush.size + (deltaY > 0 ? 1 : -1), 1), 6);
+    brush.needsUpdate = true;
   }
 
   onPointerLock() {

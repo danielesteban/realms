@@ -19,6 +19,7 @@ class Realm extends Group {
 
     this.brush = {
       color: new Color(),
+      type: 0,
       size: 1,
     };
 
@@ -37,9 +38,12 @@ class Realm extends Group {
     this.add(this.room);
 
     this.ui = new RealmUI();
-    this.ui.addEventListener('button', ({ id }) => {
+    this.ui.addEventListener('button', ({ id, index }) => {
       player.unlock();
       switch (id) {
+        case 'blockType':
+          this.brush.type = index;
+          break;
         case 'create':
         case 'fork':
           if (!this.config) {
@@ -124,6 +128,13 @@ class Realm extends Group {
       chunk.geometry.instanceCount = Voxels.offsets.visible;
     });
 
+    // TODO: Change this hacky thingy for an event
+    if (player.desktopControls.brush.needsUpdate) {
+      const { brush } = player.desktopControls;
+      this.ui.update({ blockType: brush.type, brushSize: brush.size });
+      brush.needsUpdate = false;
+    }
+
     [
       player.desktopControls,
       ...player.controllers,
@@ -165,8 +176,7 @@ class Realm extends Group {
               },
             });
           } else {
-            // TODO: move this out of desktop controls with events
-            const type = isPlacing ? player.desktopControls.brush.type + 1 : 0;
+            const type = isPlacing ? brush.type + 1 : 0;
             const color = {
               r: Math.floor(brush.color.r * 0xFF),
               g: Math.floor(brush.color.g * 0xFF),
@@ -174,15 +184,10 @@ class Realm extends Group {
             };
             // TODO: get a scalar from the ui for this
             const noise = ((color.r + color.g + color.b) / 3) * 0.15;
-
-            // TODO: move this out of desktop controls with wheel events
-            // const { size } = player.desktopControls.brush;
-            // Limit the size to 1 until I got multiple realms working
-            const size = 1;
-            const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
-            for (let z = -size; z <= size; z += 1) {
-              for (let y = -size; y <= size; y += 1) {
-                for (let x = -size; x <= size; x += 1) {
+            const radius = Math.sqrt(((brush.size * 0.5) ** 2) * 3);
+            for (let z = -brush.size; z <= brush.size; z += 1) {
+              for (let y = -brush.size; y <= brush.size; y += 1) {
+                for (let x = -brush.size; x <= brush.size; x += 1) {
                   if (Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius) {
                     const voxel = {
                       x: hit.point.x + x,
