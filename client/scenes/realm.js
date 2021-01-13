@@ -130,9 +130,11 @@ class Realm extends Group {
 
     // TODO: Change this hacky thingy for an event
     if (player.desktopControls.brush.needsUpdate) {
-      const { brush } = player.desktopControls;
-      this.ui.update({ blockType: brush.type, brushSize: brush.size });
-      brush.needsUpdate = false;
+      player.desktopControls.brush.needsUpdate = false;
+      const { type, size } = player.desktopControls.brush;
+      this.ui.update({ blockType: type, brushSize: size });
+      brush.type = type;
+      brush.size = size;
     }
 
     [
