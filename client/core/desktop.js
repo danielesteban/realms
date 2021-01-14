@@ -244,8 +244,10 @@ class DesktopControls {
 
   onMouseWheel({ deltaY }) {
     const { brush } = this;
-    brush.size = Math.min(Math.max(brush.size + (deltaY > 0 ? 1 : -1), 1), 6);
-    brush.needsUpdate = true;
+    if (!brush.needsUpdate) {
+      brush.size = Math.min(Math.max(brush.size + (deltaY > 0 ? 1 : -1), 1), 5);
+      brush.needsUpdate = true;
+    }
   }
 
   onPointerLock() {

@@ -20,6 +20,7 @@ class Realm extends Group {
     this.brush = {
       color: new Color(),
       type: 0,
+      shape: 'sphere',
       size: 1,
     };
 
@@ -184,34 +185,27 @@ class Realm extends Group {
               g: Math.floor(brush.color.g * 0xFF),
               b: Math.floor(brush.color.b * 0xFF),
             };
-            // TODO: get a scalar from the ui for this
+            // TODO: get a scalar from the ui for this noise
             const noise = ((color.r + color.g + color.b) / 3) * 0.15;
-            const radius = Math.sqrt(((brush.size * 0.5) ** 2) * 3);
-            for (let z = -brush.size; z <= brush.size; z += 1) {
-              for (let y = -brush.size; y <= brush.size; y += 1) {
-                for (let x = -brush.size; x <= brush.size; x += 1) {
-                  if (Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius) {
-                    const voxel = {
-                      x: hit.point.x + x,
-                      y: hit.point.y + y,
-                      z: hit.point.z + z,
-                      type,
-                      r: Math.min(Math.max(color.r + (Math.random() - 0.5) * noise, 0), 0xFF),
-                      g: Math.min(Math.max(color.g + (Math.random() - 0.5) * noise, 0), 0xFF),
-                      b: Math.min(Math.max(color.b + (Math.random() - 0.5) * noise, 0), 0xFF),
-                    };
-                    this.worker.postMessage({
-                      type: 'update',
-                      voxel,
-                    });
-                    this.room.serverRequest({
-                      type: 'VOXEL',
-                      json: voxel,
-                    });
-                  }
-                }
-              }
-            }
+            Realm.getBrush(brush).forEach(({ x, y, z }) => {
+              const voxel = {
+                x: hit.point.x + x,
+                y: hit.point.y + y,
+                z: hit.point.z + z,
+                type,
+                r: Math.min(Math.max(color.r + (Math.random() - 0.5) * noise, 0), 0xFF),
+                g: Math.min(Math.max(color.g + (Math.random() - 0.5) * noise, 0), 0xFF),
+                b: Math.min(Math.max(color.b + (Math.random() - 0.5) * noise, 0), 0xFF),
+              };
+              this.worker.postMessage({
+                type: 'update',
+                voxel,
+              });
+              this.room.serverRequest({
+                type: 'VOXEL',
+                json: voxel,
+              });
+            });
           }
         }
       }
@@ -370,6 +364,30 @@ class Realm extends Group {
       }, { include: creator.peer });
     }
   }
+
+  static getBrush({ shape, size }) {
+    const { brushes } = Realm;
+    const key = `${shape}:${size}`;
+    let brush = brushes.get(key);
+    if (!brush) {
+      brush = [];
+      const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
+      for (let z = -size; z <= size; z += 1) {
+        for (let y = -size; y <= size; y += 1) {
+          for (let x = -size; x <= size; x += 1) {
+            if (Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius) {
+              brush.push({ x, y, z });
+            }
+          }
+        }
+      }
+      brush.sort((a, b) => Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) - Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2));
+      brushes.set(key, brush);
+    }
+    return brush;
+  }
 }
+
+Realm.brushes = new Map();
 
 export default Realm;
