@@ -19,11 +19,13 @@ class Realm extends Group {
 
     this.brush = {
       color: new Color(),
-      type: 0,
-      shape: 'sphere',
       noise: 0.2,
+      shape: 'sphere',
       size: 1,
+      type: 0,
     };
+    player.desktopControls.brush.size = this.brush.size;
+    player.desktopControls.brush.type = this.brush.type;
 
     this.chunks = [];
     this.worker = new Worker('./core/worker/main.js', { type: 'module' });
