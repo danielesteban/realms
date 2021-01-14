@@ -18,9 +18,6 @@ module.exports.onClient = (client, req) => {
     client.terminate();
     return;
   }
-  client.isHeadless = !!(
-    ~(req.headers['user-agent'] || '').indexOf('Headless')
-  );
   let { slug } = req.params;
   slug = `${slug}`;
 

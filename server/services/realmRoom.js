@@ -25,10 +25,7 @@ class RealmRoom extends Room {
 
     client.canEdit = !creator || client.isCreator;
 
-    if (
-      !client.isCreator
-      && !client.isHeadless
-    ) {
+    if (!client.isCreator) {
       this.realm.views += 1;
       this.realm.save().catch(Room.noop);
     }
