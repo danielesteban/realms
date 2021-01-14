@@ -409,5 +409,4 @@ Realm.brushShapes = {
 
 Realm.brushes = new Map();
 
-
 export default Realm;
