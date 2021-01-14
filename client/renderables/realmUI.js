@@ -126,9 +126,14 @@ class RealmUI extends Mesh {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
       div.style.display = 'none';
+      const name = document.createElement('div');
+      name.style.display = 'flex';
+      name.appendChild(document.createTextNode(label));
+      div.appendChild(name);
       const input = document.createElement('input');
       input.style.width = '100%';
       input.type = type;
+      let valueDisplay;
       ['input', 'change'].forEach((type) => (
         input.addEventListener(type, ({ target: { value } }) => {
           switch (input.type) {
@@ -141,6 +146,9 @@ class RealmUI extends Mesh {
             default:
               break;
           }
+          if (valueDisplay) {
+            valueDisplay.innerText = value;
+          }
           // TODO: Update canvas counterpart
           this.dispatchEvent({ type, id, value });
         })
@@ -150,24 +158,25 @@ class RealmUI extends Mesh {
           input.value = '#ffffff';
           break;
         case 'range':
+          valueDisplay = document.createElement('div');
+          valueDisplay.style.marginLeft = 'auto';
           if (options) {
             input.min = options.min;
             input.max = options.max;
             input.step = options.step;
             input.value = options.value;
           }
+          valueDisplay.innerText = options.value;
+          name.appendChild(valueDisplay);
         default:
           break;
       }
-      const name = document.createElement('div');
-      name.appendChild(document.createTextNode(label));
-      div.appendChild(name);
       div.appendChild(input);
       this.dom.appendChild(div);
       // TODO: Create canvas counterpart
       const canvas = { todo: 'Input on canvas' };
       this.drawList.push(canvas);
-      this.inputs.set(id, { input, canvas });
+      this.inputs.set(id, { input, value: valueDisplay, canvas });
     };
     const label = (id, text) => {
       const div = document.createElement('div');
@@ -220,6 +229,10 @@ class RealmUI extends Mesh {
     input('brushColor', 'BRUSH', 'color');
     input('brushNoise', 'NOISE', 'range', { min: 0, max: 1, step: 0.01, value: 0.2 });
     input('brushSize', 'SIZE', 'range', { min: 1, max: 5, step: 1, value: 1 });
+    buttonGroup('brushShape', 'SHAPE', [
+      ['BOX'],
+      ['SPHERE'],
+    ]);
     buttonGroup('blockType', 'TYPE', [
       ['1', 'Block'],
       ['2', 'Light1'],
@@ -331,7 +344,7 @@ class RealmUI extends Mesh {
     const { auxColor, buttons, help, inputs, labels } = this;
     Object.keys(meta).forEach((key) => {
       if (inputs.has(key)) {
-        const { input/* , canvas */ } = inputs.get(key);
+        const { input, value/* , canvas */ } = inputs.get(key);
         switch (input.type) {
           case 'color':
             input.value = `#${auxColor.setHex(meta[key]).getHexString()}`;
@@ -339,6 +352,9 @@ class RealmUI extends Mesh {
           default:
             input.value = meta[key];
             break;
+        }
+        if (value) {
+          value.innerText = meta[key];
         }
         // TODO: Update canvas counterpart
         this.dispatchEvent({

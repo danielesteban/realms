@@ -20,7 +20,7 @@ class Realm extends Group {
     this.brush = {
       color: new Color(),
       noise: 0.2,
-      shape: 'sphere',
+      shape: Realm.brushShapes.box,
       size: 1,
       type: 0,
     };
@@ -45,6 +45,9 @@ class Realm extends Group {
     this.ui.addEventListener('button', ({ id, index }) => {
       player.unlock();
       switch (id) {
+        case 'brushShape':
+          this.brush.shape = index;
+          break
         case 'blockType':
           this.brush.type = index;
           break;
@@ -371,12 +374,12 @@ class Realm extends Group {
   }
 
   static getBrush({ shape, size }) {
-    const { brushes } = Realm;
+    const { brushShapes, brushes } = Realm;
     const key = `${shape}:${size}`;
     let brush = brushes.get(key);
     if (!brush) {
       brush = [];
-      if (shape === 'box') {
+      if (shape === brushShapes.box) {
         size -= 1;
       }
       const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
@@ -384,7 +387,7 @@ class Realm extends Group {
         for (let y = -size; y <= size; y += 1) {
           for (let x = -size; x <= size; x += 1) {
             if (
-              shape !== 'sphere'
+              shape === brushShapes.box
               || Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius
             ) {
               brush.push({ x, y, z });
@@ -399,6 +402,12 @@ class Realm extends Group {
   }
 }
 
+Realm.brushShapes = {
+  box: 0,
+  sphere: 1,
+};
+
 Realm.brushes = new Map();
+
 
 export default Realm;
