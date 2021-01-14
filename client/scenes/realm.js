@@ -21,6 +21,7 @@ class Realm extends Group {
       color: new Color(),
       type: 0,
       shape: 'sphere',
+      noise: 0.2,
       size: 1,
     };
 
@@ -71,7 +72,7 @@ class Realm extends Group {
       }
     });
     this.ui.addEventListener('change', ({ id, value }) => {
-      if (id !== 'brush') {
+      if (!['brushColor', 'brushNoise', 'brushSize'].includes(id)) {
         this.room.serverRequest({
           type: 'META',
           json: { [id]: value },
@@ -82,8 +83,12 @@ class Realm extends Group {
       if (id === 'background') {
         world.background.setHex(value);
         world.fog.color.setHex(value);
-      } if (id === 'brush') {
+      } else if (id === 'brushColor') {
         this.brush.color.setHex(value);
+      } else if (id === 'brushNoise') {
+        this.brush.noise = value;
+      } else if (id === 'brushSize') {
+        this.brush.size = value;
       } else if (
         ['ambient', 'light1', 'light2', 'light3', 'light4'].includes(id)
       ) {
@@ -185,8 +190,7 @@ class Realm extends Group {
               g: Math.floor(brush.color.g * 0xFF),
               b: Math.floor(brush.color.b * 0xFF),
             };
-            // TODO: get a scalar from the ui for this noise
-            const noise = ((color.r + color.g + color.b) / 3) * 0.15;
+            const noise = ((color.r + color.g + color.b) / 3) * brush.noise;
             Realm.getBrush(brush).forEach(({ x, y, z }) => {
               const voxel = {
                 x: hit.point.x + x,
@@ -315,7 +319,7 @@ class Realm extends Group {
         const color = r << 16 ^ g << 8 ^ b << 0;
         this.brush.color.setHex(color);
         this.brush.type = type - 1;
-        this.ui.update({ blockType: type - 1, brush: color });
+        this.ui.update({ blockType: type - 1, brushColor: color });
         break;
       }
       case 'update':

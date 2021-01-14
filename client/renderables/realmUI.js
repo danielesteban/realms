@@ -80,6 +80,7 @@ class RealmUI extends Mesh {
     const buttonGroup = (id, label, buttons) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
+      div.style.display = 'none';
       const name = document.createElement('div');
       name.appendChild(document.createTextNode(label));
       div.appendChild(name);
@@ -117,7 +118,7 @@ class RealmUI extends Mesh {
       this.dom.appendChild(div);
       this.buttons.set(id, group);
     };
-    const input = (id, label, type) => {
+    const input = (id, label, type, options) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
       div.style.display = 'none';
@@ -130,6 +131,9 @@ class RealmUI extends Mesh {
             case 'color':
               value = this.auxColor.set(value).getHex();
               break;
+            case 'range':
+              value = parseFloat(value);
+              break;
             default:
               break;
           }
@@ -141,6 +145,13 @@ class RealmUI extends Mesh {
         case 'color':
           input.value = '#ffffff';
           break;
+        case 'range':
+          if (options) {
+            input.min = options.min;
+            input.max = options.max;
+            input.step = options.step;
+            input.value = options.value;
+          }
         default:
           break;
       }
@@ -192,7 +203,9 @@ class RealmUI extends Mesh {
 
     spacer();
 
-    input('brush', 'BRUSH', 'color');
+    input('brushColor', 'BRUSH', 'color');
+    input('brushNoise', 'NOISE', 'range', { min: 0, max: 1, step: 0.01, value: 0.2 });
+    input('brushSize', 'SIZE', 'range', { min: 1, max: 5, step: 1, value: 1 });
     buttonGroup('blockType', 'TYPE', [
       ['1', 'Block'],
       ['2', 'Light1'],
@@ -336,6 +349,14 @@ class RealmUI extends Mesh {
       });
     }
     if (meta.canEdit !== undefined) {
+      [...buttons.entries()].forEach(([id, group]) => {
+        if (Array.isArray(group)) {
+          const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;
+          const button = group[0].button;
+          button.parentNode.parentNode.style.display = canEdit ? '' : 'none';
+          // TODO: Update canvas counterpart
+        }
+      });
       [...inputs.entries()].forEach(([id, { input/* , canvas */ }]) => {
         const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;
         input.parentNode.style.display = canEdit ? '' : 'none';
