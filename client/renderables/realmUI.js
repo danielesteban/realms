@@ -394,8 +394,8 @@ class RealmUI extends Mesh {
         label.parentNode.style.display = meta.isCreator ? 'none' : '';
         // TODO: Update canvas counterpart
       }
-      help.filter(({ onlyEdit }) => (onlyEdit)).forEach((div) => {
-        div.style.display = meta.canEdit ? '' : 'none';
+      help.forEach((div) => {
+        div.style.display = (div.onlyEdit && !meta.canEdit) || (!div.onlyEdit && meta.canEdit) ? 'none' : '';
       });
     }
     if (meta.hasSession !== undefined) {
