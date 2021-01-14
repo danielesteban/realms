@@ -20,7 +20,7 @@ class Realm extends Group {
     this.brush = {
       color: new Color(),
       type: 0,
-      shape: 'box',
+      shape: 'sphere',
       size: 1,
     };
 
