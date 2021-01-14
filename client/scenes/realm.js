@@ -20,7 +20,7 @@ class Realm extends Group {
     this.brush = {
       color: new Color(),
       type: 0,
-      shape: 'sphere',
+      shape: 'box',
       size: 1,
     };
 
@@ -312,11 +312,10 @@ class Realm extends Group {
     switch (message.type) {
       case 'pick': {
         const { type, r, g, b } = message.voxel;
-        this.brush.color.setHex(
-          r << 16 ^ g << 8 ^ b << 0
-        );
-        // TODO: move this out of desktop controls with events
-        this.player.desktopControls.brush.type = type - 1;
+        const color = r << 16 ^ g << 8 ^ b << 0;
+        this.brush.color.setHex(color);
+        this.brush.type = type - 1;
+        this.ui.update({ blockType: type - 1, brush: color });
         break;
       }
       case 'update':
@@ -371,11 +370,17 @@ class Realm extends Group {
     let brush = brushes.get(key);
     if (!brush) {
       brush = [];
+      if (shape === 'box') {
+        size -= 1;
+      }
       const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
       for (let z = -size; z <= size; z += 1) {
         for (let y = -size; y <= size; y += 1) {
           for (let x = -size; x <= size; x += 1) {
-            if (Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius) {
+            if (
+              shape !== 'sphere'
+              || Math.sqrt(x ** 2 + y ** 2 + z ** 2) < radius
+            ) {
               brush.push({ x, y, z });
             }
           }
