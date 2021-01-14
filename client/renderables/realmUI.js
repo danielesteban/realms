@@ -91,7 +91,10 @@ class RealmUI extends Mesh {
       const group = buttons.map((lines, i) => {
         const button = document.createElement('button');
         button.style.width = '100%';
-        button.style.borderRadius = '0';
+        let br = '0';
+        if (i === 0) br = '4px 0 0 4px';
+        else if (i === buttons.length - 1) br = '0 4px 4px 0';
+        button.style.borderRadius = br;
         button.style.fontSize = '0.6rem';
         button.style.padding = '0.2rem';
         if (i === 0) {
