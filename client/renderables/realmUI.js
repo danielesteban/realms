@@ -232,7 +232,8 @@ class RealmUI extends Mesh {
     help('left click: place block');
     help('right click: remove block');
     help('middle click: pick block');
-    help('12345: select block type');
+    help('mouse wheel: set block size');
+    help('12345: set block type');
     help('wasd: move around');
     help('spacebar: move up');
     help('shift: move down');
