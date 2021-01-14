@@ -58,6 +58,7 @@ class RealmUI extends Mesh {
     this.buttons = new Map();
     this.inputs = new Map();
     this.labels = new Map();
+    this.help = [];
     const button = (id, label, isActive) => {
       const div = document.createElement('div');
       div.style.marginBottom = '0.25rem';
@@ -181,6 +182,16 @@ class RealmUI extends Mesh {
       this.drawList.push(canvas);
       this.labels.set(id, { label, canvas });
     };
+    const help = (text, onlyEdit) => {
+      const div = document.createElement('div');
+      div.style.display = onlyEdit ? 'none' : '';
+      div.style.marginBottom = '0.25rem';
+      div.style.color = '#999';
+      div.innerText = text;
+      this.dom.appendChild(div);
+      div.onlyEdit = onlyEdit;
+      this.help.push(div);
+    };
     const spacer = () => {
       const div = document.createElement('div');
       div.style.height = '1rem';
@@ -213,6 +224,9 @@ class RealmUI extends Mesh {
       ['4', 'Light3'],
       ['5', 'Light4'],
     ]);
+
+    spacer();
+
     input('light1', 'LIGHT CHANNEL 1', 'color');
     input('light2', 'LIGHT CHANNEL 2', 'color');
     input('light3', 'LIGHT CHANNEL 3', 'color');
@@ -222,18 +236,11 @@ class RealmUI extends Mesh {
     
     spacer();
 
-    const help = (text) => {
-      const div = document.createElement('div');
-      div.style.marginBottom = '0.25rem';
-      div.style.color = '#999';
-      div.innerText = text;
-      this.dom.appendChild(div);
-    };
-    help('left click: place block');
-    help('right click: remove block');
-    help('middle click: pick block');
-    help('mouse wheel: set block size');
-    help('12345: set block type');
+    help('left click: place block', true);
+    help('right click: remove block', true);
+    help('middle click: pick block', true);
+    help('mouse wheel: set block size', true);
+    help('12345: set block type', true);
     help('wasd: move around');
     help('spacebar: move up');
     help('shift: move down');
@@ -318,7 +325,7 @@ class RealmUI extends Mesh {
   }
 
   update(meta) {
-    const { auxColor, buttons, inputs, labels } = this;
+    const { auxColor, buttons, help, inputs, labels } = this;
     Object.keys(meta).forEach((key) => {
       if (inputs.has(key)) {
         const { input/* , canvas */ } = inputs.get(key);
@@ -368,6 +375,9 @@ class RealmUI extends Mesh {
         label.parentNode.style.display = meta.isCreator ? 'none' : '';
         // TODO: Update canvas counterpart
       }
+      help.filter(({ onlyEdit }) => (onlyEdit)).forEach((div) => {
+        div.style.display = meta.canEdit ? '' : 'none';
+      });
     }
     if (meta.hasSession !== undefined) {
       const { button/* , canvas */ } = buttons.get('session');
