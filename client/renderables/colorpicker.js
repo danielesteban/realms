@@ -116,8 +116,6 @@ class ColorPicker {
         ctx.fillRect(0, 0, width, height);
       },
     ];
-    this.labels = [];
-    this.sliders = [];
     this.ui = ui;
   }
 

@@ -16,6 +16,7 @@ class RealmUI extends UI {
     this.dom = dom;
 
     this.map = new Map();
+    this.requests = [];
     this.tabs = new Map();
     this.tabsGraphics = [
       ({ ctx }) => {
@@ -42,6 +43,30 @@ class RealmUI extends UI {
       onPointer: () => this.setTab(id),
     }));
     this.tabs.set('colorpicker', new ColorPicker(this));
+    this.tabs.set('request', {
+      buttons: [
+        {
+          x: 48,
+          y: 138,
+          width: 64,
+          height: 44,
+          label: 'Nope',
+        },
+        {
+          x: 144,
+          y: 138,
+          width: 64,
+          height: 44,
+          label: 'Yep',
+        },
+      ],
+      labels: [
+        {
+          x: 128,
+          y: 96,
+        },
+      ],
+    });
 
     const lineHeight = 26;
 
@@ -495,6 +520,10 @@ class RealmUI extends UI {
   setTab(tabId, options) {
     const { tabs, tabButtons, tabsGraphics } = this;
     const tab = tabs.get(tabId);
+    if (this.tab && this.tab.dispose) {
+      this.tab.dispose();
+    }
+    this.tab = tab;
     if (tab.setup) {
       tab.setup(options);
     }
@@ -509,11 +538,11 @@ class RealmUI extends UI {
     });
     this.buttons = [
       ...tabButtons,
-      ...buttons,
+      ...(buttons || []),
     ];
-    this.graphics = [...tabsGraphics, ...graphics];
-    this.labels = labels;
-    this.sliders = sliders;
+    this.graphics = [...tabsGraphics, ...(graphics || [])];
+    this.labels = labels || [];
+    this.sliders = sliders || [];
     this.draw();
   }
 
@@ -530,7 +559,7 @@ class RealmUI extends UI {
   }
 
   renderRequest({ name, onAllow }) {
-    const { requests } = this;
+    const { requests, tabs } = this;
     const request = document.createElement('div');
     request.className = 'request';
     const question = document.createElement('div');
@@ -539,27 +568,36 @@ class RealmUI extends UI {
     request.appendChild(question);
     const actions = document.createElement('div');
     actions.className = 'actions';
-    const onClose = () => {
+    const dismiss = document.createElement('button');
+    dismiss.innerText = 'Nope';
+    dismiss.addEventListener('click', () => this.setTab('meta'));
+    actions.appendChild(dismiss);
+    const onClick = () => {
+      onAllow();
+      this.setTab('meta');
+    };
+    const allow = document.createElement('button');
+    allow.innerText = 'Yep';
+    allow.addEventListener('click', onClick);
+    actions.appendChild(allow);
+    request.appendChild(actions);
+    document.body.appendChild(request);
+
+    const tab = tabs.get('request');
+    tab.dispose = () => {
       document.body.removeChild(request);
       requests.shift();
       if (requests.length) {
         this.renderRequest(requests[0]);
       }
     };
-    const dismiss = document.createElement('button');
-    dismiss.innerText = 'Nope';
-    dismiss.addEventListener('click', onClose);
-    actions.appendChild(dismiss);
-    const allow = document.createElement('button');
-    allow.innerText = 'Yep';
-    allow.addEventListener('click', () => {
-      onAllow();
-      onClose();
-    });
-    actions.appendChild(allow);
-    request.appendChild(actions);
-    document.body.appendChild(request);
-    // TODO: Implement canvas counterpart
+    {
+      const { buttons: [nope, yep], labels: [question] } = tab;
+      question.text = `${name} wants to edit`;
+      nope.onPointer = () => this.setTab('meta');
+      yep.onPointer = onClick;
+    }
+    this.setTab('request');
   }
 
   update(meta) {

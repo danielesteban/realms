@@ -170,7 +170,7 @@ class Realm extends Group {
         || (isDesktop && (buttons.primaryDown || buttons.secondaryDown || buttons.tertiaryDown))
       ) {
         const hit = isDesktop ? (
-          raycaster.intersectObjects(pointables.filter(({ visible }) => (visible)))[0] || false
+          raycaster.intersectObjects(pointables)[0] || false
         ) : pointer.target;
         if (hit) {
           if (hit.object.onPointer) {
@@ -180,10 +180,6 @@ class Realm extends Group {
             ) {
               hit.object.onPointer(hit.point);
             }
-            return;
-          }
-          if (!config.canEdit) {
-            this.requestEdit();
             return;
           }
           const isPlacing = isDesktop ? buttons.primaryDown : buttons.triggerDown;
@@ -229,6 +225,8 @@ class Realm extends Group {
               });
             });
           }
+        } else if (!config.canEdit) {
+          this.requestEdit();
         }
       }
     });
