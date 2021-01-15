@@ -275,12 +275,12 @@ class RealmUI extends UI {
           d.style.marginLeft = 'auto';
           d.innerText = value;
           l.appendChild(d);
-          i.value = value;
           if (options) {
             i.min = options.min;
             i.max = options.max;
             i.step = options.step;
           }
+          i.value = value;
           break;
         default:
           i.value = value;
