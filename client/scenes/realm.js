@@ -106,7 +106,6 @@ class Realm extends Group {
           break;
       }
     });
-    pointables.push(this.ui);
     player.attach(this.ui, 'left');
 
     this.player = player;
@@ -247,7 +246,6 @@ class Realm extends Group {
         renderRadius: navigator.userAgent.includes('Mobile') ? 3 : 4,
       };
       Voxels.setupOffsets(this.config);
-      this.pointables.push(...Voxels.intersects);
       this.worker.postMessage({
         type: 'init',
         config: this.config,
@@ -261,6 +259,7 @@ class Realm extends Group {
       );
     }
     this.config.canEdit = !meta.creator || meta.isCreator;
+    this.updatePointables();
 
     this.worker.postMessage({
       type: 'load',
@@ -309,6 +308,7 @@ class Realm extends Group {
       case 'ALLOW':
         config.canEdit = true;
         this.ui.update({ canEdit: true });
+        this.updatePointables();
         break;
       case 'ERROR':
         router.replace('/');
@@ -384,6 +384,15 @@ class Realm extends Group {
         type: 'edit',
         name: server.session ? server.profile.name : 'Anonymous',
       }, { include: creator.peer });
+    }
+  }
+
+  updatePointables() {
+    const { config, pointables, ui } = this;
+    pointables.length = 0;
+    pointables.push(ui);
+    if (config.canEdit) {
+      pointables.push(...Voxels.intersects);
     }
   }
 
