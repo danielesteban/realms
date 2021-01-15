@@ -50,7 +50,7 @@ class UI extends Mesh {
         disabled: {
           background: '#222',
           border: '#000',
-          color: '#777',
+          color: '#333',
           ...(styles.button && styles.button.disabled ? styles.button.disabled : {}),
         },
       },

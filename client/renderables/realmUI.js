@@ -18,17 +18,6 @@ class RealmUI extends UI {
     this.map = new Map();
     this.requests = [];
     this.tabs = new Map();
-    this.tabsGraphics = [
-      ({ ctx }) => {
-        ctx.fillStyle = '#333';
-        ctx.fillRect(0, 0, 256, 32);
-        ctx.strokeStyle = '#000';
-        ctx.beginPath();
-        ctx.moveTo(0, 32);
-        ctx.lineTo(256, 32);
-        ctx.stroke();
-      },
-    ];
     this.tabButtons = [
       { id: 'meta', name: 'INFO' },
       { id: 'brush', name: 'BRUSH' },
@@ -81,7 +70,7 @@ class RealmUI extends UI {
           graphics: [],
           labels: [],
           sliders: [],
-          line: lineHeight * 1.5,
+          line: lineHeight * (tabId === 'meta' ? 1.5 : 1.8),
         };
         tab.dom.style.marginBottom = '1.5rem';
         if (tabId !== 'meta') {
@@ -518,7 +507,7 @@ class RealmUI extends UI {
   }
 
   setTab(tabId, options) {
-    const { tabs, tabButtons, tabsGraphics } = this;
+    const { tabs, tabButtons } = this;
     const tab = tabs.get(tabId);
     if (this.tab && this.tab.dispose) {
       this.tab.dispose();
@@ -534,13 +523,15 @@ class RealmUI extends UI {
       sliders,
     } = tab;
     tabButtons.forEach((button) => {
-      button.isActive = button.tab === tabId;
+      const isActive = button.tab === tabId;
+      button.background = isActive ? '#222' : undefined;
+      button.border = isActive ? 'rgba(0,0,0,0)' : undefined;
     });
     this.buttons = [
       ...tabButtons,
       ...(buttons || []),
     ];
-    this.graphics = [...tabsGraphics, ...(graphics || [])];
+    this.graphics = graphics || [];
     this.labels = labels || [];
     this.sliders = sliders || [];
     this.draw();
