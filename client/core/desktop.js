@@ -18,10 +18,6 @@ class DesktopControls {
       right: new Vector3(),
       worldUp: new Vector3(0, 1, 0),
     };
-    this.brush = {
-      type: 0,
-      size: 1,
-    };
     this.buttons = {
       primary: false,
       secondary: false,
@@ -42,7 +38,6 @@ class DesktopControls {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
-    this.onMouseWheel = this.onMouseWheel.bind(this);
     this.onPointerLock = this.onPointerLock.bind(this);
     this.requestPointerLock = this.requestPointerLock.bind(this);
     window.addEventListener('blur', this.onBlur, false);
@@ -51,7 +46,6 @@ class DesktopControls {
     document.addEventListener('mousedown', this.onMouseDown, false);
     document.addEventListener('mousemove', this.onMouseMove, false);
     document.addEventListener('mouseup', this.onMouseUp, false);
-    document.addEventListener('mousewheel', this.onMouseWheel, false);
     document.addEventListener('pointerlockchange', this.onPointerLock, false);
     renderer.addEventListener('mousedown', this.requestPointerLock, false);
   }
@@ -64,7 +58,6 @@ class DesktopControls {
     document.removeEventListener('keyup', this.onKeyUp);
     renderer.removeEventListener('mousedown', this.onMouseDown);
     document.removeEventListener('mousemove', this.onMouseMove);
-    document.removeEventListener('mousewheel', this.onMouseWheel);
     document.removeEventListener('pointerlockchange', this.onPointerLock);
     if (isLocked) {
       document.exitPointerLock();
@@ -139,7 +132,7 @@ class DesktopControls {
   }
 
   onKeyDown({ keyCode, repeat }) {
-    const { brush, keyboard } = this;
+    const { keyboard } = this;
     if (repeat) return;
     switch (keyCode) {
       case 16:
@@ -159,14 +152,6 @@ class DesktopControls {
         break;
       case 68:
         keyboard.x = 1;
-        break;
-      case 49:
-      case 50:
-      case 51:
-      case 52:
-      case 53:
-        brush.type = keyCode - 49;
-        brush.needsUpdate = true;
         break;
       default:
         break;
@@ -239,14 +224,6 @@ class DesktopControls {
         break;
       default:
         break;
-    }
-  }
-
-  onMouseWheel({ deltaY }) {
-    const { brush } = this;
-    if (!brush.needsUpdate) {
-      brush.size = Math.min(Math.max(brush.size + (deltaY < 0 ? 1 : -1), 1), 5);
-      brush.needsUpdate = true;
     }
   }
 

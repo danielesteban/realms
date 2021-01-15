@@ -21,6 +21,7 @@ class UI extends Mesh {
     buttons = [],
     graphics = [],
     labels = [],
+    sliders = [],
     styles = {},
     textureWidth = 256,
     textureHeight = 256,
@@ -53,6 +54,18 @@ class UI extends Mesh {
           ...(styles.button && styles.button.disabled ? styles.button.disabled : {}),
         },
       },
+      slider: {
+        background: '#333',
+        border: '#000',
+        color: '#393',
+        ...(styles.slider || {}),
+        disabled: {
+          background: '#222',
+          border: '#000',
+          color: '#777',
+          ...(styles.slider && styles.slider.disabled ? styles.slider.disabled : {}),
+        },
+      },
     };
     const renderer = document.createElement('canvas');
     renderer.width = textureWidth;
@@ -73,6 +86,7 @@ class UI extends Mesh {
     this.labels = labels;
     this.pointer = new Vector3();
     this.renderer = renderer;
+    this.sliders = sliders;
     this.styles = styles;
     this.texture = texture;
     this.draw();
@@ -91,13 +105,14 @@ class UI extends Mesh {
       graphics,
       labels,
       renderer,
+      sliders,
       styles,
       texture,
     } = this;
     ctx.clearRect(0, 0, renderer.width, renderer.height);
     ctx.fillStyle = styles.background;
     ctx.fillRect(0, 0, renderer.width, renderer.height);
-    graphics.forEach((draw) => {
+    graphics.filter(({ order }) => (!order || order === 'pre')).forEach((draw) => {
       ctx.save();
       draw({ ctx, styles });
       ctx.restore();
@@ -114,7 +129,8 @@ class UI extends Mesh {
       font,
       textAlign,
       textBaseline,
-      textOffset,
+      textOffsetX,
+      textOffsetY,
       isActive,
       isDisabled,
       isVisible,
@@ -143,8 +159,8 @@ class UI extends Mesh {
         ctx.textBaseline = textBaseline || button.textBaseline || styles.textBaseline;
         ctx.fillText(
           label,
-          width * 0.5,
-          height * 0.5 + (textOffset || 1)
+          textOffsetX !== undefined ? textOffsetX : (width * 0.5),
+          textOffsetY !== undefined ? textOffsetY : (height * 0.5 + 1)
         );
       }
       ctx.restore();
@@ -170,19 +186,69 @@ class UI extends Mesh {
       ctx.fillText(text, x, y);
       ctx.restore();
     });
+    sliders.forEach(({
+      x,
+      y,
+      width,
+      height,
+      background,
+      border,
+      color,
+      value,
+      isDisabled,
+      isVisible,
+    }) => {
+      if (isVisible === false) {
+        return;
+      }
+      const slider = isDisabled ? styles.slider.disabled : styles.slider;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.rect(0, 4, width, height - 8);
+      ctx.fillStyle = background || slider.background;
+      ctx.strokeStyle = border || slider.border;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = color || slider.color;
+      const thumb = height * 0.5;
+      const thumbX = Math.min(Math.max(width * value, thumb * 0.5), width - thumb * 0.5);
+      ctx.fillRect(0, 5, thumbX, height - 10);
+      ctx.beginPath();
+      ctx.arc(
+        thumbX,
+        height * 0.5,
+        thumb,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+    graphics.filter(({ order }) => (order === 'post')).forEach((draw) => {
+      ctx.save();
+      draw({ ctx, styles });
+      ctx.restore();
+    });
     texture.needsUpdate = true;
   }
 
   onPointer(point) {
-    const { buttons, pointer, renderer } = this;
+    const {
+      buttons,
+      pointer,
+      renderer,
+      sliders,
+    } = this;
     this.worldToLocal(pointer.copy(point));
     pointer.set(
       (pointer.x + 0.5) * renderer.width,
       (1 - (pointer.y + 0.5)) * renderer.height,
       0
     );
-    const l = buttons.length - 1;
-    for (let i = l; i >= 0; i -= 1) {
+    for (let i = buttons.length - 1; i >= 0; i -= 1) {
       const {
         isDisabled,
         x,
@@ -200,6 +266,31 @@ class UI extends Mesh {
         && pointer.y <= y + height
       ) {
         onPointer();
+        break;
+      }
+    }
+    for (let i = sliders.length - 1; i >= 0; i -= 1) {
+      const {
+        isDisabled,
+        x,
+        y,
+        width,
+        height,
+        onChange,
+        onInput,
+      } = sliders[i];
+      if (
+        !isDisabled
+        && (onChange || onInput)
+        && pointer.x >= x
+        && pointer.x <= x + width
+        && pointer.y >= y
+        && pointer.y <= y + height
+      ) {
+        const value = (pointer.x - x) / width;
+        sliders[i].value = value;
+        if (onChange) onChange(value);
+        if (onInput) onInput(value);
         break;
       }
     }

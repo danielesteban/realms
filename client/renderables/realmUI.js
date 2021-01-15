@@ -1,298 +1,520 @@
 import {
-  CanvasTexture,
   Color,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneBufferGeometry,
-  sRGBEncoding,
-  Vector3,
 } from '../core/three.js';
+import ColorPicker from './colorpicker.js';
+import UI from './ui.js';
 
-// TODO: Make this class extend from the UI class
-//       Once I decide how to go about the VR canvas UI
-
-class RealmUI extends Mesh {
-  static setupGeometry() {
-    RealmUI.geometry = new PlaneBufferGeometry(1, 1);
-    RealmUI.geometry.deleteAttribute('normal');
-  }
-
+class RealmUI extends UI {
   constructor() {
-    if (!RealmUI.geometry) {
-      RealmUI.setupGeometry();
-    }
-    const textureWidth = 128;
-    const textureHeight = 128;
+    super({});
+
+    this.auxColor = new Color();
+
     const dom = document.createElement('div');
     dom.className = 'ui';
     document.body.appendChild(dom);
-    const renderer = document.createElement('canvas');
-    renderer.width = textureWidth;
-    renderer.height = textureHeight;
-    const texture = new CanvasTexture(renderer);
-    texture.anisotropy = 8;
-    texture.encoding = sRGBEncoding;
-    super(
-      RealmUI.geometry,
-      new MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-      })
-    );
-    this.auxColor = new Color();
-    this.context = renderer.getContext('2d');
     this.dom = dom;
-    this.pointer = new Vector3();
-    this.renderer = renderer;
-    this.styles = {
-      background: 'rgba(0, 0, 0, .2)',
-      color: '#fff',
-      font: '700 14px monospace',
-      textAlign: 'center',
-      textBaseline: 'middle',
-    };
-    this.texture = texture;
 
-    this.drawList = [];
-    this.requests = [];
-    this.buttons = new Map();
-    this.inputs = new Map();
-    this.labels = new Map();
-    this.help = [];
-    const button = (id, label, isActive) => {
-      const div = document.createElement('div');
-      div.style.marginBottom = '0.25rem';
-      const button = document.createElement('button');
-      if (isActive) {
-        button.className = 'primary';
+    this.map = new Map();
+    this.tabs = new Map();
+    this.tabsGraphics = [
+      ({ ctx }) => {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, 0, 256, 32);
+        ctx.strokeStyle = '#000';
+        ctx.beginPath();
+        ctx.moveTo(0, 32);
+        ctx.lineTo(256, 32);
+        ctx.stroke();
+      },
+    ];
+    this.tabButtons = [
+      { id: 'meta', name: 'INFO' },
+      { id: 'brush', name: 'BRUSH' },
+      { id: 'lighting', name: 'LIGHTS' },
+    ].map(({ id, name }, i) => ({
+      x: i * 85,
+      y: 0,
+      width: 85 + (i === 2 ? 1 : 0),
+      height: 32,
+      label: name,
+      tab: id,
+      onPointer: () => this.setTab(id),
+    }));
+    this.tabs.set('colorpicker', new ColorPicker(this));
+
+    const lineHeight = 26;
+
+    const add = (tabId, id, nodes, render) => {
+      const current = this.map.get(id) || {};
+      this.map.set(id, { ...current, ...nodes });
+      let tab = this.tabs.get(tabId);
+      if (!tab) {
+        tab = {
+          dom: document.createElement('div'),
+          buttons: [],
+          graphics: [],
+          labels: [],
+          sliders: [],
+          line: lineHeight * 1.5,
+        };
+        tab.dom.style.marginBottom = '1.5rem';
+        if (tabId !== 'meta') {
+          tab.dom.style.display = 'none';
+        }
+        this.dom.appendChild(tab.dom);
+        this.tabs.set(tabId, tab);
       }
-      button.style.width = '100%';
-      button.innerText = label;
-      button.onclick = () => {
-        this.dispatchEvent({ type: 'button', id });
-      };
-      div.appendChild(button);
-      this.dom.appendChild(div);
-      // TODO: Create canvas counterpart
-      const canvas = { todo: 'Button on canvas' };
-      this.drawList.push(canvas);
-      this.buttons.set(id, { button, canvas });
+      tab.dom.appendChild(render.dom);
+      const left = 16;
+      const center = this.renderer.width * 0.5;
+      if (render.graphics) {
+        render.graphics.forEach((graphic) => {
+          tab.graphics.push(graphic);
+        });
+      }
+      if (render.labels) {
+        render.labels.forEach((label) => {
+          if (label.textAlign === 'left') {
+            label.x = left;
+          } else {
+            label.x = center;
+          }
+          label.y = tab.line + lineHeight * 0.5;
+          tab.labels.push(label);
+          tab.line += lineHeight;
+        });
+      }
+      if (render.buttons) {
+        render.buttons.forEach((button) => {
+          button.x = left;
+          button.y = tab.line;
+          button.width = 224;
+          button.height = lineHeight;
+          tab.buttons.push(button);
+          tab.line += lineHeight * (button.lineHeight || 1);
+        });
+      }
+      if (render.buttonGroups) {
+        render.buttonGroups.forEach((buttons) => {
+          const size = (this.renderer.width - left * 2) / buttons.length;
+          buttons.forEach((button, i) => {
+            button.x = left + i * size;
+            button.y = tab.line;
+            button.width = size;
+            button.height = lineHeight;
+            tab.buttons.push(button);
+          });
+          tab.line += lineHeight;
+        });
+      }
+      if (render.sliders) {
+        render.sliders.forEach((slider) => {
+          slider.x = left;
+          slider.y = tab.line;
+          slider.width = 224;
+          slider.height = lineHeight;
+          tab.sliders.push(slider);
+          tab.line += lineHeight;
+        });
+      }
     };
-    const buttonGroup = (id, label, buttons) => {
-      const div = document.createElement('div');
-      div.style.marginBottom = '0.25rem';
-      div.style.display = 'none';
-      const name = document.createElement('div');
-      name.appendChild(document.createTextNode(label));
-      div.appendChild(name);
-      const wrapper = document.createElement('div');
-      wrapper.style.margin = '0.25rem 0';
-      wrapper.style.display = 'flex';
-      const group = buttons.map((lines, i) => {
+
+    const info = (tab, id, label, value) => {
+      const w = document.createElement('div');
+      w.style.marginBottom = '0.25rem';
+      const l = document.createElement('div');
+      l.appendChild(document.createTextNode(label));
+      w.appendChild(l);
+      const v = document.createElement('div');
+      v.style.color = '#999';
+      v.style.marginTop = '0.125rem';
+      v.appendChild(document.createTextNode(value));
+      w.appendChild(v);
+      const dom = { wrapper: w, label: l, value: v };
+      const canvas = {
+        label: {
+          text: label,
+          textAlign: 'left',
+        },
+        value: {
+          text: value,
+          color: '#999',
+          textAlign: 'left',
+        },
+      };
+      add(tab, id, { info: { dom, canvas } }, { dom: w, labels: [canvas.label, canvas.value] });
+    };
+
+    const button = (tab, id, label, isActive) => {
+      const onPointer = () => (
+        this.dispatchEvent({ type: 'button', id })
+      );
+      const w = document.createElement('div');
+      w.style.marginBottom = '0.25rem';
+      const b = document.createElement('button');
+      if (isActive) {
+        b.className = 'primary';
+      }
+      b.style.width = '100%';
+      b.appendChild(document.createTextNode(label));
+      b.addEventListener('click', onPointer, false);
+      w.appendChild(b);
+      const dom = { wrappper: w, button: b };
+      const canvas = {
+        button: {
+          label,
+          isActive,
+          onPointer,
+        },
+      };
+      add(tab, id, { button: { dom, canvas } }, { dom: w, buttons: [canvas.button] });
+    };
+
+    const buttonGroup = (tab, id, label, buttons, value, options = {}) => {
+      const w = document.createElement('div');
+      w.style.marginBottom = '0.25rem';
+      const l = document.createElement('div');
+      l.appendChild(document.createTextNode(label));
+      w.appendChild(l);
+      const b = document.createElement('div');
+      b.style.margin = '0.25rem 0';
+      b.style.display = 'flex';
+      const group = { dom: [], canvas: [] };
+      buttons.forEach(({ label, key }, i) => {
         const button = document.createElement('button');
+        button.key = key;
         button.style.width = '100%';
+        if (key === value) {
+          button.className = 'primary';
+        }
         let br = '0';
         if (i === 0) br = '4px 0 0 4px';
         else if (i === buttons.length - 1) br = '0 4px 4px 0';
         button.style.borderRadius = br;
         button.style.fontSize = '0.6rem';
         button.style.padding = '0.2rem';
-        if (i === 0) {
-          button.className = 'primary';
-        } else {
+        if (i > 0) {
           button.style.borderLeft = '1px solid #111';
         }
-        button.onclick = () => {
-          group.forEach(({ button: b }) => { b.className = ''; });
-          button.className = 'primary';
-          this.dispatchEvent({ type: 'button', id, index: i });
-        };
-        lines.forEach((line) => {
+        label.forEach((line) => {
           const div = document.createElement('div');
           div.appendChild(document.createTextNode(line));
           button.appendChild(div);
         });
-        // TODO: Create canvas counterpart
-        const canvas = { todo: 'Button on canvas' };
-        this.drawList.push(canvas);
-        wrapper.appendChild(button);
-        return { button, canvas };
+        b.appendChild(button);
+        group.dom.push(button);
+        const onClick = () => {
+          group.dom.forEach((b, i) => {
+            b.className = '';
+            if (!options.noCanvas) {
+              group.canvas[i].isActive = false;
+            }
+          });
+          button.className = 'primary';
+          if (!options.noCanvas) {
+            group.canvas[i].isActive = true;
+            this.draw();
+          }
+          ['input', 'change'].forEach((event) => (
+            this.dispatchEvent({ type: event, id, value: button.key })
+          ));
+        };
+        button.addEventListener('click', onClick);
+        if (!options.noCanvas) {
+          group.canvas.push({
+            label: label[label.length - 1],
+            font: '700 10px monospace',
+            isActive: key === value,
+            onPointer: onClick,
+          });
+        }
       });
-      div.appendChild(wrapper);
-      this.dom.appendChild(div);
-      this.buttons.set(id, group);
+      w.appendChild(b);
+      const dom = { wrapper: w, buttons: group.dom, label: l };
+      let canvas = false;
+      if (!options.noCanvas) {
+        canvas = {
+          buttons: group.canvas,
+          label: {
+            text: label,
+            textAlign: 'left',
+          },
+        };
+      }
+      add(
+        tab, id, { input: { dom, canvas } },
+        !canvas ? { dom: w } : {
+          dom: w,
+          buttonGroups: [canvas.buttons],
+          labels: [canvas.label],
+        }
+      );
     };
-    const input = (id, label, type, options) => {
-      const div = document.createElement('div');
-      div.style.marginBottom = '0.25rem';
-      div.style.display = 'none';
-      const name = document.createElement('div');
-      name.style.display = 'flex';
-      name.appendChild(document.createTextNode(label));
-      div.appendChild(name);
-      const input = document.createElement('input');
-      input.style.width = '100%';
-      input.type = type;
-      let valueDisplay;
-      ['input', 'change'].forEach((type) => (
-        input.addEventListener(type, ({ target: { value } }) => {
-          switch (input.type) {
-            case 'color':
-              value = this.auxColor.set(value).getHex();
-              break;
-            case 'range':
-              value = parseFloat(value);
-              break;
-            default:
-              break;
-          }
-          if (valueDisplay) {
-            valueDisplay.innerText = value;
-          }
-          // TODO: Update canvas counterpart
-          this.dispatchEvent({ type, id, value });
-        })
-      ));
-      switch (input.type) {
+
+    const input = (tab, id, label, type, value, options = {}) => {
+      const w = document.createElement('div');
+      w.style.marginBottom = '0.25rem';
+      if (options.hidden) {
+        w.style.display = 'none';
+      }
+      const l = document.createElement('div');
+      l.style.display = 'flex';
+      l.appendChild(document.createTextNode(label));
+      w.appendChild(l);
+      const i = document.createElement('input');
+      i.style.width = '100%';
+      i.type = type;
+      let d;
+      switch (type) {
         case 'color':
-          input.value = '#ffffff';
+          i.value = `#${this.auxColor.setHex(value).getHexString()}`;
           break;
         case 'range':
-          valueDisplay = document.createElement('div');
-          valueDisplay.style.marginLeft = 'auto';
+          d = document.createElement('div');
+          d.style.marginLeft = 'auto';
+          d.innerText = value;
+          l.appendChild(d);
+          i.value = value;
           if (options) {
-            input.min = options.min;
-            input.max = options.max;
-            input.step = options.step;
-            input.value = options.value;
+            i.min = options.min;
+            i.max = options.max;
+            i.step = options.step;
           }
-          valueDisplay.innerText = options.value;
-          name.appendChild(valueDisplay);
+          break;
         default:
+          i.value = value;
           break;
       }
-      div.appendChild(input);
-      this.dom.appendChild(div);
-      // TODO: Create canvas counterpart
-      const canvas = { todo: 'Input on canvas' };
-      this.drawList.push(canvas);
-      this.inputs.set(id, { input, value: valueDisplay, canvas });
+      w.appendChild(i);
+      const dom = {
+        wrapper: w,
+        label: l,
+        input: i,
+        display: d,
+      };
+      let canvas = false;
+      if (!options.noCanvas) {
+        switch (type) {
+          case 'color': {
+            const graphic = ({ ctx }) => {
+              const { x, y, height } = canvas.button;
+              ctx.fillStyle = i.value;
+              ctx.fillRect(x + 1, y + 1, height - 2, height - 2);
+            };
+            graphic.order = 'post';
+            canvas = {
+              button: {
+                label,
+                textAlign: 'left',
+                textOffsetX: 36,
+                lineHeight: 1.2,
+                onPointer: () => {
+                  this.setTab('colorpicker', { tab, id, value: i.value });
+                },
+              },
+              color: graphic,
+            };
+            break;
+          }
+          case 'range': {
+            const scaleValue = (value) => {
+              let v = (value * (options.max - options.min));
+              v -= v % options.step;
+              v += options.min;
+              v = Math.floor(v * 100) / 100;
+              return v;
+            };
+            canvas = {
+              label: {
+                text: label,
+                textAlign: 'left',
+              },
+              slider: {
+                value: (i.value - options.min) / (options.max - options.min),
+                onChange: (value) => {
+                  const v = scaleValue(value);
+                  i.value = v;
+                  onUpdate({ type: 'change', value: v });
+                },
+                onInput: (value) => {
+                  const v = scaleValue(value);
+                  i.value = v;
+                  onUpdate({ type: 'input', value: v });
+                },
+              },
+            };
+            break;
+          }
+          default:
+            canvas = {
+              label: {
+                text: label,
+                textAlign: 'left',
+              },
+              value: {
+                text: i.value,
+                color: '#999',
+                textAlign: 'left',
+              },
+            };
+            break;
+        }
+      }
+      const onUpdate = ({ type, value }) => {
+        if (d) {
+          d.innerText = value;
+        }
+        switch (i.type) {
+          case 'color':
+            value = this.auxColor.set(value).getHex();
+            break;
+          case 'range':
+            value = parseFloat(value);
+            break;
+          default:
+            break;
+        }
+        if (canvas) {
+          if (canvas.slider) {
+            canvas.slider.value = (value - options.min) / (options.max - options.min);
+          }
+          if (canvas.value) {
+            canvas.value.text = `${value}`;
+          }
+          this.draw();
+        }
+        this.dispatchEvent({ type, id, value });
+      };
+      ['input', 'change'].forEach((type) => (
+        i.addEventListener(type, ({ target: { value } }) => onUpdate({ type, value }), false)
+      ));
+      add(
+        tab, id, { input: { dom, canvas } },
+        !canvas ? { dom: w } : {
+          dom: w,
+          buttons: [...(canvas.button ? [canvas.button] : [])],
+          graphics: [...(canvas.color ? [canvas.color] : [])],
+          labels: [
+            ...(canvas.label ? [canvas.label] : []),
+            ...(canvas.value ? [canvas.value] : []),
+          ],
+          sliders: [...(canvas.slider ? [canvas.slider] : [])],
+        }
+      );
     };
-    const label = (id, text) => {
-      const div = document.createElement('div');
-      const name = document.createElement('div');
-      name.appendChild(document.createTextNode(text));
-      div.appendChild(name);
-      const label = document.createElement('div');
-      label.style.color = '#999';
-      label.style.marginTop = '0.125rem';
-      label.innerHTML = '&nbsp;';
-      div.appendChild(label);
-      this.dom.appendChild(div);
-      // TODO: Create canvas counterpart
-      const canvas = { todo: 'Label on canvas' };
-      this.drawList.push(canvas);
-      this.labels.set(id, { label, canvas });
-    };
+
+    this.help = [];
     const help = (text, onlyEdit) => {
       const div = document.createElement('div');
       div.style.display = onlyEdit ? 'none' : '';
       div.style.marginBottom = '0.25rem';
       div.style.color = '#999';
-      div.innerText = text;
+      div.appendChild(document.createTextNode(text));
       this.dom.appendChild(div);
       div.onlyEdit = onlyEdit;
       this.help.push(div);
     };
-    const spacer = () => {
-      const div = document.createElement('div');
-      div.style.height = '1rem';
-      this.dom.appendChild(div);
-      // TODO: Create canvas counterpart
-      const canvas = { todo: 'spacer on canvas' };
-      this.drawList.push(canvas);
-    };
 
-    input('name', 'TITLE', 'text');
-    label('name', 'TITLE', '');
-    label('creator', 'CREATOR');
+    input('meta', 'name', 'TITLE', 'text', '···', { hidden: true, noCanvas: true });
+    info('meta', 'name', 'TITLE', '···');
+    info('meta', 'creator', 'CREATOR', '···');
 
-    spacer();
+    button('meta', 'menu', 'Browse realms', true);
+    button('meta', 'fork', 'Make a copy');
+    button('meta', 'create', 'Create new');
+    button('meta', 'session', 'Sign-In');
 
-    button('menu', 'Browse realms', true);
-    button('fork', 'Make a copy');
-    button('create', 'Create new');
-    button('session', 'Sign-In');
+    input('brush', 'brushColor', 'COLOR', 'color', 0xFFFFFF);
+    input('brush', 'brushNoise', 'NOISE', 'range', 0.15, { min: 0, max: 1, step: 0.01 });
+    input('brush', 'brushSize', 'SIZE', 'range', 1, { min: 1, max: 5, step: 1, noCanvas: true });
+    buttonGroup('brush', 'brushShape', 'SHAPE', [
+      { label: ['BOX'], key: 'box' },
+      { label: ['SPHERE'], key: 'sphere' },
+    ], 'box', { noCanvas: true });
+    buttonGroup('brush', 'blockType', 'TYPE', [
+      { label: ['1', 'Block'], key: 0 },
+      { label: ['2', 'Light1'], key: 1 },
+      { label: ['3', 'Light2'], key: 2 },
+      { label: ['4', 'Light3'], key: 3 },
+      { label: ['5', 'Light4'], key: 4 },
+    ], 0);
 
-    spacer();
-
-    input('brushColor', 'BRUSH', 'color');
-    input('brushNoise', 'NOISE', 'range', { min: 0, max: 1, step: 0.01, value: 0.2 });
-    input('brushSize', 'SIZE', 'range', { min: 1, max: 5, step: 1, value: 1 });
-    buttonGroup('brushShape', 'SHAPE', [
-      ['BOX'],
-      ['SPHERE'],
-    ]);
-    buttonGroup('blockType', 'TYPE', [
-      ['1', 'Block'],
-      ['2', 'Light1'],
-      ['3', 'Light2'],
-      ['4', 'Light3'],
-      ['5', 'Light4'],
-    ]);
-
-    spacer();
-
-    input('light1', 'LIGHT CHANNEL 1', 'color');
-    input('light2', 'LIGHT CHANNEL 2', 'color');
-    input('light3', 'LIGHT CHANNEL 3', 'color');
-    input('light4', 'LIGHT CHANNEL 4', 'color');
-    input('background', 'BACKGROUND', 'color');
-    input('ambient', 'AMBIENT LIGHT', 'color');
-    
-    spacer();
+    input('lighting', 'light1', 'LIGHT CHANNEL 1', 'color', 0);
+    input('lighting', 'light2', 'LIGHT CHANNEL 2', 'color', 0);
+    input('lighting', 'light3', 'LIGHT CHANNEL 3', 'color', 0);
+    input('lighting', 'light4', 'LIGHT CHANNEL 4', 'color', 0);
+    input('lighting', 'background', 'BACKGROUND', 'color', 0);
+    input('lighting', 'ambient', 'AMBIENT LIGHT', 'color', 0);
 
     help('left click: place blocks', true);
     help('right click: remove blocks', true);
     help('middle click: pick block', true);
-    help('mouse wheel: set brush size', true);
     help('12345: set brush type', true);
     help('wasd: move around');
     help('spacebar: move up');
     help('shift: move down');
+
+    this.setTab('meta');
+
+    this.onKeyDown = this.onKeyDown.bind(this);
+    document.addEventListener('keydown', this.onKeyDown, false);
 
     this.position.set(-0.02, -0.02, 0);
     this.rotation.set(0, Math.PI * -0.5, Math.PI * 0.5);
     this.scale.set(0.3, 0.3, 1);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
-    this.draw();
   }
 
   dispose() {
-    const { dom, material, texture } = this;
+    const { dom } = this;
+    super.dispose();
     document.body.removeChild(dom);
-    material.dispose();
-    texture.dispose();
+    document.removeEventListener('keydown', this.onKeyDown);
   }
 
-  draw() {
-    const {
-      context: ctx,
-      renderer,
-      styles,
-    } = this;
-    ctx.clearRect(0, 0, renderer.width, renderer.height);
-    ctx.fillStyle = styles.background;
-    ctx.fillRect(0, 0, renderer.width, renderer.height);
+  onKeyDown({ keyCode, repeat }) {
+    const { map } = this;
+    if (repeat) return;
+    switch (keyCode) {
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53: {
+        const { input: { dom } } = map.get('blockType');
+        dom.buttons[keyCode - 49].click();
+        break;
+      }
+      default:
+        break;
+    }
+  }
 
-    // TODO!!
-    ctx.fillStyle = styles.color;
-    ctx.font = styles.font;
-    ctx.textAlign = styles.textAlign;
-    ctx.textBaseline = styles.textBaseline;
-    ctx.fillText('VR UI', renderer.width * 0.5, renderer.height * 0.4);
-    ctx.fillText('COMING SOON!', renderer.width * 0.5, renderer.height * 0.6);
+  setTab(tabId, options) {
+    const { tabs, tabButtons, tabsGraphics } = this;
+    const tab = tabs.get(tabId);
+    if (tab.setup) {
+      tab.setup(options);
+    }
+    const {
+      buttons,
+      graphics,
+      labels,
+      sliders,
+    } = tab;
+    tabButtons.forEach((button) => {
+      button.isActive = button.tab === tabId;
+    });
+    this.buttons = [
+      ...tabButtons,
+      ...buttons,
+    ];
+    this.graphics = [...tabsGraphics, ...graphics];
+    this.labels = labels;
+    this.sliders = sliders;
+    this.draw();
   }
 
   showRequest(request) {
@@ -341,68 +563,79 @@ class RealmUI extends Mesh {
   }
 
   update(meta) {
-    const { auxColor, buttons, help, inputs, labels } = this;
+    const {
+      auxColor,
+      map,
+      tabs,
+      tabButtons,
+      help,
+    } = this;
     Object.keys(meta).forEach((key) => {
-      if (inputs.has(key)) {
-        const { input, value/* , canvas */ } = inputs.get(key);
-        switch (input.type) {
-          case 'color':
-            input.value = `#${auxColor.setHex(meta[key]).getHexString()}`;
-            break;
-          default:
-            input.value = meta[key];
-            break;
+      const value = meta[key];
+      if (map.has(key)) {
+        const { info, input } = map.get(key);
+        if (info) {
+          info.dom.value.innerText = value;
+          info.canvas.value.text = value;
         }
-        if (value) {
-          value.innerText = meta[key];
+        if (input) {
+          if (input.dom.display) {
+            input.dom.display.innerText = value;
+          }
+          if (input.dom.input) {
+            switch (input.dom.input.type) {
+              case 'color':
+                input.dom.input.value = `#${auxColor.setHex(value).getHexString()}`;
+                break;
+              default:
+                input.dom.input.value = value;
+                break;
+            }
+            if (input.canvas && input.canvas.value) {
+              input.canvas.value.text = input.dom.input.value;
+            }
+          }
+          if (input.dom.buttons) {
+            input.dom.buttons.forEach((button, i) => {
+              const isActive = button.key === value;
+              button.className = isActive ? 'primary' : '';
+              if (input.canvas && input.canvas.buttons) {
+                input.canvas.buttons[i].isActive = isActive;
+              }
+            });
+          }
+          this.dispatchEvent({
+            type: 'input',
+            id: key,
+            value: meta[key],
+          });
         }
-        // TODO: Update canvas counterpart
-        this.dispatchEvent({
-          type: 'input',
-          id: key,
-          value: meta[key],
+      }
+      if (key === 'canEdit') {
+        const editTabs = ['brush', 'lighting'];
+        editTabs.forEach((tab) => {
+          const { dom } = tabs.get(tab);
+          dom.style.display = !value ? 'none' : '';
+        });
+        tabButtons.forEach((button) => {
+          button.isDisabled = !value && editTabs.includes(button.tab);
+        });
+        help.forEach((div) => {
+          div.style.display = (!value && div.onlyEdit) || (value && !div.onlyEdit) ? 'none' : '';
         });
       }
-      if (labels.has(key)) {
-        const { label/* , canvas */ } = labels.get(key);
-        label.innerText = meta[key];
-        // TODO: Update canvas counterpart
+      if (key === 'hasSession') {
+        const { button } = map.get('session');
+        const text = meta.hasSession ? 'Sign-Out' : 'Sign-In';
+        button.dom.button.innerText = text;
+        button.canvas.button.label = text;
+      }
+      if (key === 'isCreator') {
+        const { info, input } = map.get('name');
+        info.dom.wrapper.style.display = value ? 'none' : '';
+        input.dom.wrapper.style.display = value ? '' : 'none';
       }
     });
-    if (meta.blockType !== undefined) {
-      buttons.get('blockType').forEach(({ button/* , canvas */ }, i) => {
-        button.className = meta.blockType === i  ? 'primary' : '';
-        // TODO: Update canvas counterpart
-      });
-    }
-    if (meta.canEdit !== undefined) {
-      [...buttons.entries()].forEach(([id, group]) => {
-        if (Array.isArray(group)) {
-          const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;
-          const button = group[0].button;
-          button.parentNode.parentNode.style.display = canEdit ? '' : 'none';
-          // TODO: Update canvas counterpart
-        }
-      });
-      [...inputs.entries()].forEach(([id, { input/* , canvas */ }]) => {
-        const canEdit = id === 'name' ? meta.isCreator : meta.canEdit;
-        input.parentNode.style.display = canEdit ? '' : 'none';
-        // TODO: Update canvas counterpart
-      });
-      {
-        const { label/* , canvas */ } = labels.get('name');
-        label.parentNode.style.display = meta.isCreator ? 'none' : '';
-        // TODO: Update canvas counterpart
-      }
-      help.forEach((div) => {
-        div.style.display = (div.onlyEdit && !meta.canEdit) || (!div.onlyEdit && meta.canEdit) ? 'none' : '';
-      });
-    }
-    if (meta.hasSession !== undefined) {
-      const { button/* , canvas */ } = buttons.get('session');
-      button.innerText = meta.hasSession ? 'Sign-Out' : 'Sign-In';
-      // TODO: Update canvas counterpart
-    }
     this.draw();
   }
 }

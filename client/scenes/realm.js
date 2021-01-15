@@ -19,13 +19,11 @@ class Realm extends Group {
 
     this.brush = {
       color: new Color(),
-      noise: 0.2,
+      noise: 0.15,
       shape: Realm.brushShapes.box,
       size: 1,
       type: 0,
     };
-    player.desktopControls.brush.size = this.brush.size;
-    player.desktopControls.brush.type = this.brush.type;
 
     this.chunks = [];
     this.worker = new Worker('./core/worker/main.js', { type: 'module' });
@@ -42,15 +40,8 @@ class Realm extends Group {
     this.add(this.room);
 
     this.ui = new RealmUI();
-    this.ui.addEventListener('button', ({ id, index }) => {
-      player.unlock();
+    this.ui.addEventListener('button', ({ id }) => {
       switch (id) {
-        case 'brushShape':
-          this.brush.shape = index;
-          break
-        case 'blockType':
-          this.brush.type = index;
-          break;
         case 'create':
         case 'fork':
           if (!this.config) {
@@ -66,6 +57,7 @@ class Realm extends Group {
           if (server.session) {
             server.logout();
           } else {
+            player.unlock();
             server.showDialog('session');
           }
           break;
@@ -77,7 +69,7 @@ class Realm extends Group {
       }
     });
     this.ui.addEventListener('change', ({ id, value }) => {
-      if (!['brushColor', 'brushNoise', 'brushSize'].includes(id)) {
+      if (!['brushColor', 'brushNoise', 'brushSize', 'brushShape', 'blockType'].includes(id)) {
         this.room.serverRequest({
           type: 'META',
           json: { [id]: value },
@@ -85,21 +77,36 @@ class Realm extends Group {
       }
     });
     this.ui.addEventListener('input', ({ id, value }) => {
-      if (id === 'background') {
-        world.background.setHex(value);
-        world.fog.color.setHex(value);
-      } else if (id === 'brushColor') {
-        this.brush.color.setHex(value);
-      } else if (id === 'brushNoise') {
-        this.brush.noise = value;
-      } else if (id === 'brushSize') {
-        this.brush.size = value;
-      } else if (
-        ['ambient', 'light1', 'light2', 'light3', 'light4'].includes(id)
-      ) {
-        Voxels.updateLighting({ [id]: value });
+      switch (id) {
+        case 'background':
+          world.background.setHex(value);
+          world.fog.color.setHex(value);
+          break;
+        case 'brushColor':
+          this.brush.color.setHex(value);
+          break;
+        case 'brushNoise':
+          this.brush.noise = value;
+          break;
+        case 'brushSize':
+          this.brush.size = value;
+          break;
+        case 'brushShape':
+          this.brush.shape = value;
+          break;
+        case 'blockType':
+          this.brush.type = value;
+          break;
+        default:
+          if (
+            ['ambient', 'light1', 'light2', 'light3', 'light4'].includes(id)
+          ) {
+            Voxels.updateLighting({ [id]: value });
+          }
+          break;
       }
     });
+    pointables.push(this.ui);
     player.attach(this.ui, 'left');
 
     this.player = player;
@@ -114,6 +121,7 @@ class Realm extends Group {
       chunks,
       config,
       player,
+      pointables,
       room,
     } = this;
 
@@ -139,15 +147,12 @@ class Realm extends Group {
       chunk.geometry.instanceCount = Voxels.offsets.visible;
     });
 
-    // TODO: Change this hacky thingy for an event
-    if (player.desktopControls.brush.needsUpdate) {
-      player.desktopControls.brush.needsUpdate = false;
-      const { type, size } = player.desktopControls.brush;
-      this.ui.update({ blockType: type, brushSize: size });
-      brush.type = type;
-      brush.size = size;
-    }
-
+    // Cleanup:
+    // I need to unify this pointables logic with the one from the menu
+    // into the world animationTick and just move the voxels pointer logic
+    // into a onPointer method on each Voxels.intersects
+    // But first:
+    // I need refactor the UI class so I can delegate the button state handling to it's onPointer method
     [
       player.desktopControls,
       ...player.controllers,
@@ -166,9 +171,18 @@ class Realm extends Group {
         || (isDesktop && (buttons.primaryDown || buttons.secondaryDown || buttons.tertiaryDown))
       ) {
         const hit = isDesktop ? (
-          raycaster.intersectObjects(Voxels.intersects)[0] || false
+          raycaster.intersectObjects(pointables.filter(({ visible }) => (visible)))[0] || false
         ) : pointer.target;
         if (hit) {
+          if (hit.object.onPointer) {
+            if (
+              (hand && buttons.triggerDown)
+              || (isDesktop && buttons.primaryDown)
+            ) {
+              hit.object.onPointer(hit.point);
+            }
+            return;
+          }
           if (!config.canEdit) {
             this.requestEdit();
             return;
@@ -395,7 +409,9 @@ class Realm extends Group {
           }
         }
       }
-      brush.sort((a, b) => Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) - Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2));
+      brush.sort((a, b) => (
+        Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) - Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2)
+      ));
       brushes.set(key, brush);
     }
     return brush;

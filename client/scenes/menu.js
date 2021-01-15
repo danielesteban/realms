@@ -111,7 +111,7 @@ class Menu extends Group {
         {
           x: 128,
           y: 31,
-          text: '...',
+          text: '···',
           pagination: true,
         },
       ],
@@ -228,7 +228,7 @@ class Menu extends Group {
     });
     ui.labels.forEach((label) => {
       if (label.pagination) {
-        label.text = '...';
+        label.text = '···';
       }
     });
     ui.draw();
