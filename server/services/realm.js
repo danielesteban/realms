@@ -197,7 +197,7 @@ module.exports.list = (filter) => ([
           .sort(sorting)
           .skip(page * pageSize)
           .limit(pageSize)
-          .select('-_id name slug')
+          .select('name slug')
           .lean()
           .then((realms) => (
             res.json({
