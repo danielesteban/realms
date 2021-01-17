@@ -6,7 +6,7 @@ const { checkValidationResult } = require('./errorHandler');
 const { Realm } = require('../models');
 const config = require('../config');
 
-const clientPath =  path.join(__dirname, '..', '..', 'client');
+const clientPath = path.join(__dirname, '..', '..', 'client');
 
 module.exports = (app) => {
   let index;
