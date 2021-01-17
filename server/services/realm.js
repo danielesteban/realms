@@ -100,6 +100,7 @@ module.exports.fork = [
   (req, res, next) => {
     Realm
       .findById(req.params.id)
+      .lean()
       .then((realm) => {
         if (!realm) {
           throw notFound();
@@ -116,7 +117,7 @@ module.exports.fork = [
           light2: realm.light2,
           light3: realm.light3,
           light4: realm.light4,
-          voxels: realm.voxels,
+          voxels: realm.voxels.buffer,
         });
         fork
           .save()
@@ -139,6 +140,7 @@ module.exports.getScreenshot = [
         screenshot: { $exists: true },
       })
       .select('updatedAt')
+      .lean()
       .then((realm) => {
         if (!realm) {
           throw notFound();
@@ -150,12 +152,13 @@ module.exports.getScreenshot = [
         return Realm
           .findById(realm._id)
           .select('-_id screenshot')
+          .lean()
           .then(({ screenshot }) => (
             res
               .set('Cache-Control', 'must-revalidate')
               .set('Content-Type', 'image/png')
               .set('Last-Modified', lastModified)
-              .send(screenshot)
+              .send(screenshot.buffer)
           ));
       })
       .catch(next);
@@ -195,6 +198,7 @@ module.exports.list = (filter) => ([
           .skip(page * pageSize)
           .limit(pageSize)
           .select('name slug createdAt')
+          .lean()
           .then((realms) => (
             res.json({
               pages: Math.ceil(count / pageSize),

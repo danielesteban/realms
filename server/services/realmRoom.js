@@ -55,19 +55,29 @@ class RealmRoom extends Room {
     };
   }
 
-  static sanitizeLight(color) {
-    if (color === undefined) {
-      return false;
-    }
-    color = parseInt(`${color}`, 10);
+  static sanitizeLight(light) {
     if (
-      Number.isNaN(color)
-      || color < 0
-      || color > 0xffffff
+      light === undefined
+      || light.band === undefined
+      || light.color === undefined
     ) {
       return false;
     }
-    return color;
+    light = {
+      band: parseInt(`${light.band}`, 10),
+      color: parseInt(`${light.color}`, 10),
+    };
+    if (
+      Number.isNaN(light.band)
+      || light.band < 0
+      || light.band > 8
+      || Number.isNaN(light.color)
+      || light.color < 0
+      || light.color > 0xffffff
+    ) {
+      return false;
+    }
+    return light;
   }
 
   onRequest(client, request) {

@@ -69,7 +69,7 @@ input[type="color"], input[type="email"], input[type="password"], input[type="te
   font-family: inherit;
 }
 
-input[type="color"] {
+input[type="color"], select {
   padding: 0.05rem;
 }
 

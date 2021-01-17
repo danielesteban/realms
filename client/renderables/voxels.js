@@ -60,6 +60,13 @@ class Voxels extends Mesh {
       fog: true,
       vertexColors: true,
     });
+    Voxels.material.uniformsById = {
+      ambient: Voxels.material.uniforms.ambientLight.value,
+      light1: Voxels.material.uniforms.lightChannel1.value,
+      light2: Voxels.material.uniforms.lightChannel2.value,
+      light3: Voxels.material.uniforms.lightChannel3.value,
+      light4: Voxels.material.uniforms.lightChannel4.value,
+    };
   }
 
   static setupOffsets({
@@ -108,24 +115,6 @@ class Voxels extends Mesh {
     Voxels.spheres = spheres;
   }
 
-  static updateLighting({
-    ambient,
-    light1,
-    light2,
-    light3,
-    light4,
-  }) {
-    if (!Voxels.material) {
-      Voxels.setupMaterial();
-    }
-    const { material: { uniforms } } = Voxels;
-    if (ambient !== undefined) uniforms.ambientLight.value.setHex(ambient);
-    if (light1 !== undefined) uniforms.lightChannel1.value.setHex(light1);
-    if (light2 !== undefined) uniforms.lightChannel2.value.setHex(light2);
-    if (light3 !== undefined) uniforms.lightChannel3.value.setHex(light3);
-    if (light4 !== undefined) uniforms.lightChannel4.value.setHex(light4);
-  }
-
   static updateIntersects(boxes) {
     const { vector } = Voxels.aux;
     const model = new BoxBufferGeometry(1, 1, 1);
@@ -151,6 +140,13 @@ class Voxels extends Mesh {
     Voxels.intersects.forEach((intersect) => {
       intersect.geometry = geometry;
     });
+  }
+
+  static updateLighting(id, color) {
+    if (!Voxels.material) {
+      Voxels.setupMaterial();
+    }
+    Voxels.material.uniformsById[id].setHex(color);
   }
 
   static updateOffsets(camera) {

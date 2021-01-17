@@ -418,6 +418,81 @@ class RealmUI extends UI {
       );
     };
 
+    const light = (tab, id, label, band, color) => {
+      const w = document.createElement('div');
+      w.style.marginBottom = '0.25rem';
+      const l = document.createElement('div');
+      l.appendChild(document.createTextNode(label));
+      w.appendChild(l);
+      const g = document.createElement('div');
+      g.style.display = 'flex';
+      const b = document.createElement('select');
+      b.style.width = '55%';
+      ['Fixed', 'Band 1', 'Band 2', 'Band 3', 'Band 4', 'Band 5', 'Band 6', 'Band 7', 'Band 8'].forEach((v, i) => {
+        const o = document.createElement('option');
+        o.value = `${i}`;
+        o.appendChild(document.createTextNode(v));
+        b.appendChild(o);
+      });
+      b.value = `${band}`;
+      g.appendChild(b);
+      const c = document.createElement('input');
+      c.type = 'color';
+      c.value = `#${this.auxColor.setHex(color).getHexString()}`;
+      g.appendChild(c);
+      w.appendChild(g);
+      const dom = {
+        wrapper: w,
+        label: l,
+        band: b,
+        color: c,
+      };
+      const graphic = ({ ctx }) => {
+        const { x, y, height } = canvas.button;
+        ctx.fillStyle = c.value;
+        ctx.fillRect(x + 1, y + 1, height - 2, height - 2);
+      };
+      graphic.order = 'post';
+      // INCOMPLETE:
+      // Implement band selector on canvas
+      const canvas = {
+        button: {
+          label,
+          textAlign: 'left',
+          textOffsetX: 36,
+          lineHeight: 1.2,
+          onPointer: () => {
+            this.setTab('colorpicker', { tab, id, value: c.value });
+          },
+        },
+        color: graphic,
+      };
+      const onUpdate = (type) => () => {
+        this.draw();
+        this.dispatchEvent({
+          type,
+          id,
+          value: {
+            band: parseInt(b.value, 10),
+            color: this.auxColor.set(c.value).getHex(),
+          },
+        });
+      };
+      ['input', 'change'].forEach((type) => {
+        b.addEventListener(type, onUpdate(type), false);
+        c.addEventListener(type, onUpdate(type), false);
+      });
+      add(
+        tab, id, { light: { dom, canvas } },
+        !canvas ? { dom: w } : {
+          dom: w,
+          buttons: [...(canvas.button ? [canvas.button] : [])],
+          graphics: [...(canvas.color ? [canvas.color] : [])],
+          labels: [...(canvas.label ? [canvas.label] : [])],
+        }
+      );
+    };
+
     this.help = [];
     const help = (text, onlyEdit) => {
       const div = document.createElement('div');
@@ -441,7 +516,7 @@ class RealmUI extends UI {
 
     input('brush', 'brushColor', 'COLOR', 'color', 0xFFFFFF);
     input('brush', 'brushNoise', 'NOISE', 'range', 0.15, { min: 0, max: 1, step: 0.01 });
-    input('brush', 'brushSize', 'SIZE', 'range', 1, { min: 1, max: 5, step: 1, noCanvas: true });
+    input('brush', 'brushSize', 'SIZE', 'range', 1, { min: 1, max: 4, step: 1, noCanvas: true });
     buttonGroup('brush', 'brushShape', 'SHAPE', [
       { label: ['BOX'], key: 'box' },
       { label: ['SPHERE'], key: 'sphere' },
@@ -454,12 +529,12 @@ class RealmUI extends UI {
       { label: ['5', 'Light4'], key: 4 },
     ], 0);
 
-    input('lighting', 'light1', 'LIGHT CHANNEL 1', 'color', 0);
-    input('lighting', 'light2', 'LIGHT CHANNEL 2', 'color', 0);
-    input('lighting', 'light3', 'LIGHT CHANNEL 3', 'color', 0);
-    input('lighting', 'light4', 'LIGHT CHANNEL 4', 'color', 0);
-    input('lighting', 'background', 'BACKGROUND', 'color', 0);
-    input('lighting', 'ambient', 'AMBIENT LIGHT', 'color', 0);
+    light('lighting', 'light1', 'LIGHT CHANNEL 1', 0, 0);
+    light('lighting', 'light2', 'LIGHT CHANNEL 2', 0, 0);
+    light('lighting', 'light3', 'LIGHT CHANNEL 3', 0, 0);
+    light('lighting', 'light4', 'LIGHT CHANNEL 4', 0, 0);
+    light('lighting', 'background', 'BACKGROUND', 0, 0);
+    light('lighting', 'ambient', 'AMBIENT LIGHT', 0, 0);
 
     help('left click: place blocks', true);
     help('right click: remove blocks', true);
@@ -602,41 +677,47 @@ class RealmUI extends UI {
     Object.keys(meta).forEach((key) => {
       const value = meta[key];
       if (map.has(key)) {
-        const { info, input } = map.get(key);
+        const { info, input, light } = map.get(key);
         if (info) {
           info.dom.value.innerText = value;
           info.canvas.value.text = value;
         }
-        if (input) {
-          if (input.dom.display) {
-            input.dom.display.innerText = value;
+        if (light || input) {
+          if (light) {
+            light.dom.band.value = `${value.band}`;
+            light.dom.color.value = `#${auxColor.setHex(value.color).getHexString()}`;
           }
-          if (input.dom.input) {
-            switch (input.dom.input.type) {
-              case 'color':
-                input.dom.input.value = `#${auxColor.setHex(value).getHexString()}`;
-                break;
-              default:
-                input.dom.input.value = value;
-                break;
+          if (input) {
+            if (input.dom.display) {
+              input.dom.display.innerText = value;
             }
-            if (input.canvas && input.canvas.value) {
-              input.canvas.value.text = input.dom.input.value;
-            }
-          }
-          if (input.dom.buttons) {
-            input.dom.buttons.forEach((button, i) => {
-              const isActive = button.key === value;
-              button.className = isActive ? 'primary' : '';
-              if (input.canvas && input.canvas.buttons) {
-                input.canvas.buttons[i].isActive = isActive;
+            if (input.dom.input) {
+              switch (input.dom.input.type) {
+                case 'color':
+                  input.dom.input.value = `#${auxColor.setHex(value).getHexString()}`;
+                  break;
+                default:
+                  input.dom.input.value = value;
+                  break;
               }
-            });
+              if (input.canvas && input.canvas.value) {
+                input.canvas.value.text = input.dom.input.value;
+              }
+            }
+            if (input.dom.buttons) {
+              input.dom.buttons.forEach((button, i) => {
+                const isActive = button.key === value;
+                button.className = isActive ? 'primary' : '';
+                if (input.canvas && input.canvas.buttons) {
+                  input.canvas.buttons[i].isActive = isActive;
+                }
+              });
+            }
           }
           this.dispatchEvent({
             type: 'input',
             id: key,
-            value: meta[key],
+            value,
           });
         }
       }

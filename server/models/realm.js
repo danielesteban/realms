@@ -3,6 +3,11 @@ const slug = require('mongoose-slug-updater');
 const Generators = require('../generators');
 const Screenshots = require('../services/screenshots');
 
+const Light = ({ band = 0, color = 0 }) => ({
+  band: { type: Number, default: band },
+  color: { type: Number, default: color },
+});
+
 const RealmSchema = new mongoose.Schema({
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -13,12 +18,12 @@ const RealmSchema = new mongoose.Schema({
   width: { type: Number, required: true },
   height: { type: Number, required: true },
   depth: { type: Number, required: true },
-  ambient: { type: Number, default: 0x050505 },
-  background: { type: Number, default: 0x0c0c0c },
-  light1: { type: Number, default: 0xbfbfbf },
-  light2: { type: Number, default: 0x7f7f7f },
-  light3: { type: Number, default: 0x3f3f3f },
-  light4: { type: Number, default: 0x1f1f1f },
+  ambient: Light({ color: 0x050505 }),
+  background: Light({ color: 0x0c0c0c }),
+  light1: Light({ color: 0xbfbfbf }),
+  light2: Light({ color: 0x7f7f7f }),
+  light3: Light({ color: 0x3f3f3f }),
+  light4: Light({ color: 0x1f1f1f }),
   screenshot: Buffer,
   slug: { type: String, slug: 'name', unique: true },
   views: {
@@ -33,12 +38,12 @@ const RealmSchema = new mongoose.Schema({
 
 RealmSchema.pre('save', function onSave(next) {
   this.needsScreeenshot = (
-    this.isModified('ambient')
-    || this.isModified('background')
-    || this.isModified('light1')
-    || this.isModified('light2')
-    || this.isModified('light3')
-    || this.isModified('light4')
+    this.isModified('ambient.color')
+    || this.isModified('background.color')
+    || this.isModified('light1.color')
+    || this.isModified('light2.color')
+    || this.isModified('light3.color')
+    || this.isModified('light4.color')
     || this.isModified('voxels')
   );
   next();
@@ -48,12 +53,12 @@ RealmSchema.post('save', function onSaved() {
   const realm = this;
   if (
     realm.needsScreeenshot
-    && realm.isSelected('ambient')
-    && realm.isSelected('background')
-    && realm.isSelected('light1')
-    && realm.isSelected('light2')
-    && realm.isSelected('light3')
-    && realm.isSelected('light4')
+    && realm.isSelected('ambient.color')
+    && realm.isSelected('background.color')
+    && realm.isSelected('light1.color')
+    && realm.isSelected('light2.color')
+    && realm.isSelected('light3.color')
+    && realm.isSelected('light4.color')
     && realm.isSelected('voxels')
   ) {
     realm.updateScreenshot();

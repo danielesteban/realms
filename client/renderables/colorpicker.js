@@ -51,11 +51,25 @@ class ColorPicker {
               );
               if (i === 0) {
                 const { tab, id } = this.value;
-                const { input: { dom: { input } } } = ui.map.get(this.value.id);
-                input.value = `#${this.color.getHexString()}`;
-                ['input', 'change'].forEach((event) => (
-                  ui.dispatchEvent({ type: event, id, value: this.color.getHex() })
-                ));
+                const { light, input } = ui.map.get(this.value.id);
+                if (light) {
+                  light.dom.color.value = `#${this.color.getHexString()}`;
+                  ['input', 'change'].forEach((event) => (
+                    ui.dispatchEvent({
+                      type: event,
+                      id,
+                      value: {
+                        band: parseInt(light.dom.band.value, 10),
+                        color: this.color.getHex(),
+                      },
+                    })
+                  ));
+                } else {
+                  input.dom.input.value = `#${this.color.getHexString()}`;
+                  ['input', 'change'].forEach((event) => (
+                    ui.dispatchEvent({ type: event, id, value: this.color.getHex() })
+                  ));
+                }
                 ui.setTab(tab);
               } else {
                 this.area.color.copy(this.color);

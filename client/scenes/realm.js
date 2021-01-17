@@ -12,10 +12,19 @@ class Realm extends Group {
   constructor(world, { slug }) {
     super();
 
-    const { player, pointables, router, server } = world;
+    const { player, server } = world;
 
     world.background = new Color(0);
     world.fog = new FogExp2(0, navigator.userAgent.includes('Mobile') ? 0.03 : 0.02);
+
+    this.auxColor = new Color();
+    this.background = world.background;
+    this.fog = world.fog;
+    this.music = world.music;
+    this.player = player;
+    this.pointables = world.pointables;
+    this.router = world.router;
+    this.server = server;
 
     this.brush = {
       color: new Color(),
@@ -40,85 +49,21 @@ class Realm extends Group {
     this.add(this.room);
 
     this.ui = new RealmUI();
-    this.ui.addEventListener('button', ({ id }) => {
-      switch (id) {
-        case 'create':
-        case 'fork':
-          if (!this.config) {
-            return;
-          }
-          server.request({
-            endpoint: id === 'fork' ? `realm/${this.config._id}/fork` : 'realm',
-            method: 'POST',
-          })
-            .then((slug) => router.push(`/${slug}`));
-          break;
-        case 'session':
-          if (server.session) {
-            server.logout();
-          } else {
-            player.unlock();
-            server.showDialog('session');
-          }
-          break;
-        case 'menu':
-          router.push('/');
-          break;
-        default:
-          break;
-      }
-    });
-    this.ui.addEventListener('change', ({ id, value }) => {
-      if (!['brushColor', 'brushNoise', 'brushSize', 'brushShape', 'blockType'].includes(id)) {
-        this.room.serverRequest({
-          type: 'META',
-          json: { [id]: value },
-        });
-      }
-    });
-    this.ui.addEventListener('input', ({ id, value }) => {
-      switch (id) {
-        case 'background':
-          world.background.setHex(value);
-          world.fog.color.setHex(value);
-          break;
-        case 'brushColor':
-          this.brush.color.setHex(value);
-          break;
-        case 'brushNoise':
-          this.brush.noise = value;
-          break;
-        case 'brushSize':
-          this.brush.size = value;
-          break;
-        case 'brushShape':
-          this.brush.shape = value;
-          break;
-        case 'blockType':
-          this.brush.type = value;
-          break;
-        default:
-          if (
-            ['ambient', 'light1', 'light2', 'light3', 'light4'].includes(id)
-          ) {
-            Voxels.updateLighting({ [id]: value });
-          }
-          break;
-      }
-    });
+    this.ui.addEventListener('button', this.onUIButton.bind(this));
+    this.ui.addEventListener('change', this.onUIChange.bind(this));
+    this.ui.addEventListener('input', this.onUIInput.bind(this));
     player.attach(this.ui, 'left');
-
-    this.player = player;
-    this.pointables = pointables;
-    this.router = router;
-    this.server = server;
   }
 
   onAnimationTick({ animation, camera }) {
     const {
+      auxColor,
+      background,
       brush,
       chunks,
       config,
+      fog,
+      music,
       player,
       pointables,
       room,
@@ -144,6 +89,23 @@ class Realm extends Group {
     Voxels.updateOffsets(camera);
     chunks.forEach((chunk) => {
       chunk.geometry.instanceCount = Voxels.offsets.visible;
+    });
+
+    const octaves = music.getOctaves();
+    Object.keys(config.lighting).forEach((key) => {
+      const { band, color } = config.lighting[key];
+      auxColor.setHex(color);
+      if (band !== 0) {
+        auxColor.multiplyScalar(
+          Math.max(octaves[band - 1] - 0.2, 0) / 0.8
+        );
+      }
+      if (key === 'background') {
+        background.copy(auxColor);
+        fog.color.copy(auxColor);
+      } else {
+        Voxels.updateLighting(key, auxColor.getHex());
+      }
     });
 
     // Cleanup:
@@ -233,6 +195,12 @@ class Realm extends Group {
   }
 
   onInit({ json: meta, buffer: voxels }) {
+    const {
+      player,
+      server,
+      worker,
+      ui,
+    } = this;
     if (!this.config) {
       this.config = {
         _id: meta._id,
@@ -244,11 +212,11 @@ class Realm extends Group {
         renderRadius: navigator.userAgent.includes('Mobile') ? 3 : 4,
       };
       Voxels.setupOffsets(this.config);
-      this.worker.postMessage({
+      worker.postMessage({
         type: 'init',
         config: this.config,
       });
-      this.player.teleport(
+      player.teleport(
         new Vector3(
           this.config.width * Voxels.scale * 0.5,
           0.5,
@@ -257,18 +225,27 @@ class Realm extends Group {
       );
     }
     this.config.canEdit = !meta.creator || meta.isCreator;
+    this.config.lighting = {
+      ambient: meta.ambient,
+      background: meta.background,
+      light1: meta.light1,
+      light2: meta.light2,
+      light3: meta.light3,
+      light4: meta.light4,
+    };
     this.updatePointables();
 
-    this.worker.postMessage({
+    worker.postMessage({
       type: 'load',
       data: voxels,
     });
 
-    this.ui.update({
-      ...meta,
+    ui.update({
       creator: meta.creator || 'Anonymous',
       canEdit: this.config.canEdit,
-      hasSession: !!this.server.session,
+      name: meta.name,
+      hasSession: !!server.session,
+      ...this.config.lighting,
     });
   }
 
@@ -357,6 +334,84 @@ class Realm extends Group {
         Voxels.updateIntersects(message.intersects);
         break;
       default:
+        break;
+    }
+  }
+
+  onUIButton({ id }) {
+    const {
+      config,
+      player,
+      router,
+      server,
+    } = this;
+    switch (id) {
+      case 'create':
+      case 'fork':
+        if (!config) {
+          return;
+        }
+        server.request({
+          endpoint: id === 'fork' ? `realm/${config._id}/fork` : 'realm',
+          method: 'POST',
+        })
+          .then((slug) => router.push(`/${slug}`));
+        break;
+      case 'session':
+        if (server.session) {
+          server.logout();
+        } else {
+          player.unlock();
+          server.showDialog('session');
+        }
+        break;
+      case 'menu':
+        router.push('/');
+        break;
+      default:
+        break;
+    }
+  }
+
+  onUIChange({ id, value }) {
+    const { room } = this;
+    if (['brushColor', 'brushNoise', 'brushSize', 'brushShape', 'blockType'].includes(id)) {
+      return;
+    }
+    room.serverRequest({
+      type: 'META',
+      json: { [id]: value },
+    });
+  }
+
+  onUIInput({ id, value }) {
+    const {
+      brush,
+      config,
+    } = this;
+    if (!config) {
+      return;
+    }
+    switch (id) {
+      case 'brushColor':
+        brush.color.setHex(value);
+        break;
+      case 'brushNoise':
+        brush.noise = value;
+        break;
+      case 'brushSize':
+        brush.size = value;
+        break;
+      case 'brushShape':
+        brush.shape = value;
+        break;
+      case 'blockType':
+        brush.type = value;
+        break;
+      default:
+        if (Object.keys(config.lighting).includes(id)) {
+          config.lighting[id] = value;
+        }
         break;
     }
   }

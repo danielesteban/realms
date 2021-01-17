@@ -24,7 +24,7 @@ class World extends Scene {
     this.player = new Player({ camera, dom, xr: renderer.xr });
     this.add(this.player);
 
-    this.music = new Music(this.player.head.context.state === 'running');
+    this.music = new Music(this.player.head.context);
     this.sfx = new SFX({ listener: this.player.head });
     this.pointables = [];
     this.router = router;

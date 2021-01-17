@@ -39,12 +39,12 @@ class Screenshots {
                     width: model.width,
                     height: model.height,
                     depth: model.depth,
-                    ambient: model.ambient,
-                    background: model.background,
-                    light1: model.light1,
-                    light2: model.light2,
-                    light3: model.light3,
-                    light4: model.light4,
+                    ambient: model.ambient.color,
+                    background: model.background.color,
+                    light1: model.light1.color,
+                    light2: model.light2.color,
+                    light3: model.light3.color,
+                    light4: model.light4.color,
                   }))
                   .replace(/__VOXELS__/, JSON.stringify([...model._doc.voxels]))
               )
