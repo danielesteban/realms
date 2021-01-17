@@ -1,5 +1,5 @@
-const { notFound, unauthorized } = require('@hapi/boom');
-const { body, param } = require('express-validator');
+const { unauthorized } = require('@hapi/boom');
+const { body } = require('express-validator');
 const passport = require('passport');
 const { checkValidationResult } = require('./errorHandler');
 const config = require('../config');
@@ -69,7 +69,7 @@ module.exports.register = [
     .not().isEmpty()
     .trim(),
   checkValidationResult,
-  (req, res) => {
+  (req, res, next) => {
     const user = new User({
       email: req.body.email,
       name: req.body.name,
@@ -77,7 +77,7 @@ module.exports.register = [
     });
     user.save()
       .then(() => res.json(user.issueToken()))
-      .catch(() => res.status(500).end());
+      .catch(next);
   },
 ];
 
@@ -87,10 +87,10 @@ module.exports.updateProfile = [
     .isLength({ min: 1, max: 25 })
     .trim(),
   checkValidationResult,
-  (req, res) => {
+  (req, res, next) => {
     req.user.name = req.body.name;
     req.user.save()
       .then(() => res.json(req.user.issueToken()))
-      .catch(() => res.status(500).end());
+      .catch(next);
   },
 ];

@@ -123,9 +123,9 @@ module.exports.fork = [
           .save()
           .then(({ slug }) => (
             res.json(slug)
-          ))
-          .catch(next);
-      });
+          ));
+      })
+      .catch(next);
   },
 ];
 
@@ -197,7 +197,7 @@ module.exports.list = (filter) => ([
           .sort(sorting)
           .skip(page * pageSize)
           .limit(pageSize)
-          .select('name slug createdAt')
+          .select('-_id name slug')
           .lean()
           .then((realms) => (
             res.json({

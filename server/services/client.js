@@ -25,7 +25,7 @@ module.exports = (app) => {
     param('slug')
       .not().isEmpty(),
     checkValidationResult,
-    (req, res) => {
+    (req, res, next) => {
       Realm
         .findOne({ slug: `${req.params.slug}` })
         .select('name')
@@ -34,18 +34,21 @@ module.exports = (app) => {
             res.redirect(config.clientOrigin);
             return;
           }
-          res.type('text/html').send(
-            index
-              .replace(
-                '<meta property="og:title" content="realms" />',
-                `<meta property="og:title" content=${JSON.stringify(realm.name)} />`
-              )
-              .replace(
-                '<meta property="og:image" content="https://realms.gatunes.com/screenshot.png" />',
-                `<meta property="og:image" content="https://${req.headers.host}/realm/${realm._id}/screenshot" />`
-              )
-          );
-        });
+          res
+            .type('text/html')
+            .send(
+              index
+                .replace(
+                  '<meta property="og:title" content="realms" />',
+                  `<meta property="og:title" content=${JSON.stringify(realm.name)} />`
+                )
+                .replace(
+                  '<meta property="og:image" content="https://realms.gatunes.com/screenshot.png" />',
+                  `<meta property="og:image" content="https://${req.headers.host}/realm/${realm._id}/screenshot" />`
+                )
+            );
+        })
+        .catch(next);
     },
   ]);
 };
