@@ -1,6 +1,4 @@
-import {
-  Color,
-} from '../core/three.js';
+import { Color } from '../core/three.js';
 import ColorPicker from './colorpicker.js';
 import UI from './ui.js';
 import Visualizer from './visualizer.js';
