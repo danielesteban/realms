@@ -283,7 +283,7 @@ class Player extends Group {
         this.move(
           vector
             .normalize()
-            .applyQuaternion(worldspace.quaternion)
+            .applyQuaternion(head.quaternion)
             .multiplyScalar(animation.delta * 4)
         );
       }
