@@ -46,7 +46,7 @@ class Screenshots {
                     light3: model.light3.color,
                     light4: model.light4.color,
                   }))
-                  .replace(/__VOXELS__/, JSON.stringify([...model._doc.voxels]))
+                  .replace(/__VOXELS__/, JSON.stringify([...(new Uint8Array(model.voxels.buffer))]))
               )
           ))
           .then(() => (
