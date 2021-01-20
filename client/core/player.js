@@ -250,7 +250,6 @@ class Player extends Group {
       },
       pointer,
       raycaster,
-      worldspace,
     }) => {
       if (!hand) {
         return;
