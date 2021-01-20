@@ -17,6 +17,7 @@ class Sharing {
     const openInPopup = (button) => (e) => {
       e.preventDefault();
       window.open(button.href, '', 'width=640,height=720');
+      Sharing.closeDialog();
     };
     Sharing.buttons.forEach(({ id, icon }) => {
       const button = document.createElement('a');
