@@ -56,6 +56,19 @@ class RealmUI extends UI {
         },
       ],
     });
+    this.tabs.set('select', {
+      setup({ options, selected, onSelect }) {
+        this.buttons = options.map(({ label, value }, i) => ({
+          x: 16 + 76 * (i % 3),
+          y: 90 + 32 * Math.floor(i / 3),
+          label,
+          width: 72,
+          height: 26,
+          isActive: value === selected,
+          onPointer: () => onSelect(value),
+        }));
+      },
+    });
 
     const lineHeight = 26;
 
@@ -101,12 +114,14 @@ class RealmUI extends UI {
       }
       if (render.buttons) {
         render.buttons.forEach((button) => {
-          button.x = left;
+          button.x = button.x || left;
           button.y = tab.line;
-          button.width = 224;
+          button.width = button.width || 224;
           button.height = lineHeight;
           tab.buttons.push(button);
-          tab.line += lineHeight * (button.lineHeight || 1);
+          if (!button.sameLine) {
+            tab.line += lineHeight * (button.lineHeight || 1);
+          }
         });
       }
       if (render.buttonGroups) {
@@ -428,11 +443,13 @@ class RealmUI extends UI {
       g.style.display = 'flex';
       const b = document.createElement('select');
       b.style.width = '55%';
+      const options = [];
       ['Fixed', 'Band 1', 'Band 2', 'Band 3', 'Band 4', 'Band 5', 'Band 6', 'Band 7', 'Band 8'].forEach((v, i) => {
         const o = document.createElement('option');
         o.value = `${i}`;
         o.appendChild(document.createTextNode(v));
         b.appendChild(o);
+        options.push({ label: v, value: `${i}` });
       });
       b.value = `${band}`;
       g.appendChild(b);
@@ -448,32 +465,58 @@ class RealmUI extends UI {
         color: c,
       };
       const graphic = ({ ctx }) => {
-        const { x, y, height } = canvas.button;
+        const { x, y, height } = canvas.buttons.color;
         ctx.fillStyle = c.value;
-        ctx.fillRect(x + 1, y + 1, height - 2, height - 2);
+        ctx.strokeStyle = '#000';
+        ctx.beginPath();
+        ctx.rect(x, y + 1, height - 2, height - 2);
+        ctx.fill();
+        ctx.stroke();
       };
       graphic.order = 'post';
-      // INCOMPLETE:
-      // Implement band selector on canvas
       const canvas = {
-        button: {
-          label,
-          textAlign: 'left',
-          textOffsetX: 36,
-          lineHeight: 1.2,
-          onPointer: () => {
-            this.setTab('colorpicker', { tab, id, value: c.value });
+        buttons: {
+          band: {
+            label: band === 0 ? 'F' : `B${band}`,
+            lineHeight: 1.2,
+            width: 34,
+            sameLine: true,
+            onPointer: () => {
+              this.setTab('select', {
+                options,
+                selected: b.value,
+                onSelect: (value) => {
+                  b.value = value;
+                  onUpdate('input')();
+                  onUpdate('change')();
+                  this.setTab(tab);
+                },
+              });
+            },
+          },
+          color: {
+            label,
+            textAlign: 'left',
+            textOffsetX: 32,
+            lineHeight: 1.2,
+            x: 50,
+            width: 190,
+            onPointer: () => {
+              this.setTab('colorpicker', { tab, id, value: c.value });
+            },
           },
         },
         color: graphic,
       };
       const onUpdate = (type) => () => {
+        const band = parseInt(b.value, 10);
+        canvas.buttons.band.label = band === 0 ? 'F' : `B${band}`;
         this.draw();
         this.dispatchEvent({
           type,
           id,
           value: {
-            band: parseInt(b.value, 10),
+            band,
             color: this.auxColor.set(c.value).getHex(),
           },
         });
@@ -486,9 +529,8 @@ class RealmUI extends UI {
         tab, id, { light: { dom, canvas } },
         !canvas ? { dom: w } : {
           dom: w,
-          buttons: [...(canvas.button ? [canvas.button] : [])],
-          graphics: [...(canvas.color ? [canvas.color] : [])],
-          labels: [...(canvas.label ? [canvas.label] : [])],
+          buttons: [canvas.buttons.band, canvas.buttons.color],
+          graphics: [canvas.color],
         }
       );
     };
@@ -544,7 +586,8 @@ class RealmUI extends UI {
     help('spacebar: move up');
     help('shift: move down');
 
-    this.setTab('meta');
+    // this.setTab('meta');
+    this.setTab('lighting');
 
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
@@ -686,6 +729,7 @@ class RealmUI extends UI {
           if (light) {
             light.dom.band.value = `${value.band}`;
             light.dom.color.value = `#${auxColor.setHex(value.color).getHexString()}`;
+            light.canvas.buttons.band.label = value.band === 0 ? 'F' : `B${value.band}`;
           }
           if (input) {
             if (input.dom.display) {
