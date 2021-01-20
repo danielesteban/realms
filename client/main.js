@@ -1,6 +1,7 @@
 import Renderer from './core/renderer.js';
 import Router from './core/router.js';
 import Server from './core/server.js';
+import Welcome from './renderables/welcome.js';
 import * as scenes from './scenes/index.js';
 
 const server = new Server(`https://${document.location.host}`);
@@ -26,3 +27,5 @@ router.addEventListener('update', ({ slug }) => {
   renderer.world.load('Realm', { slug });
 });
 router.update();
+
+Welcome.showDialog();

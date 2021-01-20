@@ -10,7 +10,6 @@ import Frame from '../renderables/frame.js';
 import Realm from '../renderables/realm.js';
 import Stand from '../renderables/stand.js';
 import UI from '../renderables/ui.js';
-import Welcome from '../renderables/welcome.js';
 
 class Menu extends Group {
   constructor(world) {
@@ -134,8 +133,6 @@ class Menu extends Group {
     this.router = router;
     this.server = server;
     this.setFilter(Menu.filter, Menu.page);
-
-    Welcome.showDialog();
   }
 
   onAnimationTick({ animation }) {

@@ -1,6 +1,6 @@
 class Welcome {
   static showDialog() {
-    if (Welcome.hasShowed) {
+    if (localStorage.getItem('realms::welcome') === Welcome.version) {
       return;
     }
     // This is maybe nuts.. but I'm feeling nostalgic this days.
@@ -13,7 +13,10 @@ class Welcome {
     close.innerText = '×';
     wrapper.appendChild(close);
 
-    const closeDialog = () => document.body.removeChild(dialog);
+    const closeDialog = () => {
+      document.body.removeChild(dialog);
+      localStorage.setItem('realms::welcome', Welcome.version);
+    };
     close.addEventListener('click', closeDialog);
 
     const letter = document.createElement('div');
@@ -44,8 +47,9 @@ class Welcome {
 
     dialog.appendChild(wrapper);
     document.body.appendChild(dialog);
-    Welcome.hasShowed = true;
   }
 }
+
+Welcome.version = '1';
 
 export default Welcome;
