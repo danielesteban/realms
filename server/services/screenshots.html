@@ -59,7 +59,9 @@
 
       Voxels.setupOffsets(config);
       Voxels.updateOffsets(camera);
-      Voxels.updateLighting(meta);
+      ['ambient', 'light1' , 'light2', 'light3', 'light4'].forEach((key) => (
+        Voxels.updateLighting(key, meta[key])
+      ));
 
       const worker = new Worker('__CLIENT__/core/worker/main.js', { type: 'module' });
       worker.addEventListener('message', ({ data: { chunks } }) => {
