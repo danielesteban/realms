@@ -497,7 +497,7 @@ class RealmUI extends UI {
           color: {
             label,
             textAlign: 'left',
-            textOffsetX: 32,
+            textOffsetX: 30,
             lineHeight: 1.2,
             x: 50,
             width: 190,
@@ -586,8 +586,7 @@ class RealmUI extends UI {
     help('spacebar: move up');
     help('shift: move down');
 
-    // this.setTab('meta');
-    this.setTab('lighting');
+    this.setTab('meta');
 
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
