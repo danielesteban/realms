@@ -31,7 +31,7 @@ class Visualizer {
     bar.ox = (bar.x - bar.w) * 0.5;
     ctx.clearRect(0, 0, width, height);
     bins.forEach((value, i) => {
-      const step = steps * value;
+      const step = Math.round(steps * value);
       for (let j = 0; j < steps; j += 1) {
         ctx.fillStyle = j < step ? on : off;
         ctx.fillRect(
@@ -45,6 +45,6 @@ class Visualizer {
   }
 }
 
-Visualizer.steps = 10;
+Visualizer.steps = 16;
 
 export default Visualizer;
