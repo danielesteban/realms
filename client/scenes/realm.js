@@ -91,7 +91,7 @@ class Realm extends Group {
       chunk.geometry.instanceCount = Voxels.offsets.visible;
     });
 
-    const octaves = music.getOctaves();
+    const octaves = music.getOctaves(animation.delta);
     Object.keys(config.lighting).forEach((key) => {
       const { band, color } = config.lighting[key];
       auxColor.setHex(color);

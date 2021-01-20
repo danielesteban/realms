@@ -31,7 +31,9 @@ class Music {
     analyser.bins = new Float32Array(analyser.octaves.length - 1);
     analyser.buffer = new Uint8Array(analyser.frequencyBinCount);
     analyser.last = new Float32Array(analyser.octaves.length - 1);
+    analyser.sampleRate = 1 / 30;
     analyser.smoothing = 0.8;
+    analyser.timer = 0;
     this.analyser = analyser;
 
     const player = document.createElement('audio');
@@ -54,27 +56,32 @@ class Music {
     this.play();
   }
 
-  getOctaves() {
+  getOctaves(delta) {
     const { analyser } = this;
     const {
       bins,
       buffer,
       last,
       octaves,
+      sampleRate,
       smoothing,
     } = analyser;
-    analyser.getByteFrequencyData(buffer);
-    for (let i = 0, l = octaves.length - 1; i < l; i += 1) {
-      const from = octaves[i];
-      const to = octaves[i + 1];
-      const count = to - from;
-      let sum = 0;
-      for (let j = from; j < to; j += 1) {
-        sum += (buffer[j] / 0xFF) ** 2;
+    analyser.timer += delta;
+    if (analyser.timer >= sampleRate) {
+      analyser.timer -= sampleRate;
+      analyser.getByteFrequencyData(buffer);
+      for (let i = 0, l = octaves.length - 1; i < l; i += 1) {
+        const from = octaves[i];
+        const to = octaves[i + 1];
+        const count = to - from;
+        let sum = 0;
+        for (let j = from; j < to; j += 1) {
+          sum += (buffer[j] / 0xFF) ** 2;
+        }
+        const sample = Math.max(Math.sqrt(sum / count), last[i] * smoothing);
+        bins[i] = sample;
+        last[i] = sample;
       }
-      const sample = Math.max(Math.sqrt(sum / count), last[i] * smoothing);
-      bins[i] = sample;
-      last[i] = sample;
     }
     return bins;
   }
