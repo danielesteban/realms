@@ -31,7 +31,7 @@ class Music {
     analyser.bins = new Float32Array(analyser.octaves.length - 1);
     analyser.buffer = new Uint8Array(analyser.frequencyBinCount);
     analyser.last = new Float32Array(analyser.octaves.length - 1);
-    analyser.sampleRate = 1 / 30;
+    analyser.sampleRate = 1 / 60;
     analyser.smoothing = 0.8;
     analyser.timer = 0;
     this.analyser = analyser;
