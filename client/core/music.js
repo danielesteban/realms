@@ -23,7 +23,7 @@ class Music {
       analyser.octaves = [...Array(9)].map((v, i) => (
         Math.round(
           (
-            equalTemperament(24 + i * 12) * analyser.fftSize
+            equalTemperament(12 + i * 12) * analyser.fftSize
           ) / context.sampleRate
         )
       ));
