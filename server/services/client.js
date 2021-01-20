@@ -29,6 +29,7 @@ module.exports = (app) => {
       Realm
         .findOne({ slug: `${req.params.slug}` })
         .select('name')
+        .lean()
         .then((realm) => {
           if (!realm) {
             res.redirect(config.clientOrigin);
