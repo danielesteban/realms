@@ -172,20 +172,18 @@ module.exports.list = (filter) => ([
   (req, res, next) => {
     const { page } = req.params;
     const pageSize = 5;
-    const selector = filter === 'user' ? (
-      { creator: req.user._id }
-    ) : (
-      { creator: { $exists: true } }
-    );
+    const selector = {};
     let sorting;
     switch (filter) {
       default:
         sorting = '-createdAt';
         break;
       case 'popular':
+        selector.creator = { $exists: true };
         sorting = '-views';
         break;
       case 'user':
+        selector.creator = req.user._id;
         sorting = '-updatedAt';
         break;
     }
