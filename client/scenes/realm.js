@@ -99,9 +99,7 @@ class Realm extends Group {
       const { band, color } = config.lighting[key];
       auxColor.setHex(color);
       if (band !== 0) {
-        auxColor.multiplyScalar(
-          Math.max(octaves[band - 1] - 0.2, 0) / 0.8
-        );
+        auxColor.multiplyScalar(octaves[band - 1]);
       }
       if (key === 'background') {
         background.copy(auxColor);

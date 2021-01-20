@@ -33,6 +33,7 @@ class Music {
     analyser.last = new Float32Array(analyser.octaves.length - 1);
     analyser.sampleRate = 1 / 60;
     analyser.smoothing = 0.8;
+    analyser.threshold = 0.2;
     analyser.timer = 0;
     this.analyser = analyser;
 
@@ -65,6 +66,7 @@ class Music {
       octaves,
       sampleRate,
       smoothing,
+      threshold,
     } = analyser;
     analyser.timer += delta;
     if (analyser.timer >= sampleRate) {
@@ -79,7 +81,7 @@ class Music {
           sum += (buffer[j] / 0xFF) ** 2;
         }
         const sample = Math.max(Math.sqrt(sum / count), last[i] * smoothing);
-        bins[i] = sample;
+        bins[i] = Math.max(sample - threshold, 0) / (1 - threshold);
         last[i] = sample;
       }
     }
