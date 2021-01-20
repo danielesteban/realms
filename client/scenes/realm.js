@@ -57,7 +57,7 @@ class Realm extends Group {
     player.attach(this.ui, 'left');
   }
 
-  onAnimationTick({ animation, camera }) {
+  onAnimationTick({ animation, camera, isXR }) {
     const {
       auxColor,
       background,
@@ -69,6 +69,7 @@ class Realm extends Group {
       player,
       pointables,
       room,
+      ui,
     } = this;
 
     if (!config) {
@@ -109,6 +110,9 @@ class Realm extends Group {
         Voxels.updateLighting(key, auxColor.getHex());
       }
     });
+    if (!isXR) {
+      ui.visualizer.update(octaves);
+    }
 
     // Cleanup:
     // I need to unify this pointables logic with the one from the menu
@@ -245,6 +249,7 @@ class Realm extends Group {
     ui.update({
       creator: meta.creator || 'Anonymous',
       canEdit: this.config.canEdit,
+      isCreator: meta.isCreator,
       name: meta.name,
       hasSession: !!server.session,
       ...this.config.lighting,

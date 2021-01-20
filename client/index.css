@@ -32,7 +32,6 @@ button:disabled {
 
 canvas {
   vertical-align: middle;
-  cursor: pointer;
 }
 
 #cursor {
@@ -121,6 +120,7 @@ body.pointerlock #discord {
   position: relative;
   width: 100vw;
   height: 100vh;
+  cursor: pointer;
 }
 
 #ribbon {

@@ -97,14 +97,16 @@ class Renderer {
     };
 
     // Render world
+    const isXR = renderer.xr.enabled && renderer.xr.isPresenting;
     world.player.updateMatrixWorld();
     world.onAnimationTick({
       animation,
-      camera: renderer.xr.enabled && renderer.xr.isPresenting ? (
+      camera: isXR ? (
         renderer.xr.getCamera(camera)
       ) : (
         camera
       ),
+      isXR,
     });
     renderer.render(world, camera);
 

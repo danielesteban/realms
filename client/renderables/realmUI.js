@@ -3,6 +3,7 @@ import {
 } from '../core/three.js';
 import ColorPicker from './colorpicker.js';
 import UI from './ui.js';
+import Visualizer from './visualizer.js';
 
 // WELCOME TO THE JUNGLE
 // We got fun and games
@@ -98,7 +99,7 @@ class RealmUI extends UI {
           sliders: [],
           line: lineHeight * (tabId === 'meta' ? 1.5 : 1.8),
         };
-        tab.dom.style.marginBottom = '1.5rem';
+        tab.dom.style.marginBottom = '1.25rem';
         if (tabId !== 'meta') {
           tab.dom.style.display = 'none';
         }
@@ -590,6 +591,9 @@ class RealmUI extends UI {
     light('lighting', 'light4', 'LIGHT CHANNEL 4', 0, 0);
     light('lighting', 'background', 'BACKGROUND', 0, 0);
     light('lighting', 'ambient', 'AMBIENT LIGHT', 0, 0);
+
+    this.visualizer = new Visualizer();
+    this.dom.appendChild(this.visualizer.renderer);
 
     help('left click: place blocks', true);
     help('right click: remove blocks', true);
