@@ -4,6 +4,7 @@ import {
   Group,
   Vector3,
 } from '../core/three.js';
+import Room from '../core/room.js';
 import Grid from '../renderables/grid.js';
 import Dome from '../renderables/dome.js';
 import Frame from '../renderables/frame.js';
@@ -32,6 +33,13 @@ class Menu extends Group {
       return realm;
     });
     this.realms = realms;
+
+    this.room = new Room({
+      endpoint: 'menu',
+      player,
+      server,
+    });
+    this.add(this.room);
 
     const ui = new UI({
       buttons: [
@@ -137,9 +145,10 @@ class Menu extends Group {
 
   onAnimationTick({ animation }) {
     const {
-      realms,
       player,
       pointables,
+      realms,
+      room,
       router,
     } = this;
     const { auxVector: wrap, position } = player;
@@ -163,6 +172,7 @@ class Menu extends Group {
       realm.position.y = realm.animation.position + Math.sin(t) * 0.02;
       realm.rotation.y = realm.animation.rotation + Math.sin(t * 0.75) * 0.1;
     });
+    room.animate(animation);
     [
       player.desktopControls,
       ...player.controllers,
@@ -266,8 +276,9 @@ class Menu extends Group {
   }
 
   onUnload() {
-    const { realms, ui } = this;
+    const { realms, room, ui } = this;
     realms.forEach((realm) => realm.dispose());
+    room.disconnect();
     ui.dispose();
   }
 }

@@ -1,11 +1,19 @@
 const nocache = require('nocache');
 const { authenticate, authenticateWS, requireAuth } = require('./services/passport');
+const menu = require('./services/menu');
 const realm = require('./services/realm');
 const user = require('./services/user');
 
 const preventCache = nocache();
 
 module.exports = (api) => {
+  // Menu
+
+  api.ws(
+    '/menu',
+    menu.onClient
+  );
+
   // Realms
 
   api.ws(
