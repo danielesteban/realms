@@ -9,14 +9,14 @@ import Visualizer from './visualizer.js';
 // We got fun and games
 // We got everything you want, honey, we know the names
 
-// If you read pass this point you will prolly loose your sanity.
-// Consider yourself notified.
-
 // This is a bit of an experimental idea I'm still fleshing out.
 // The main requirement in my mind at the time was to have a single UI update function
 // and events for both the desktop and the VR UI. So far it's proven to work fine even though
 // it's getting a bit crazy to mantain. This will prolly be rewritten into a more structured
 // thingy once I'm confident that I have a good idea of what the UI needs really are.
+
+// If you read pass this point you will prolly lose your sanity.
+// You've been warned. Proceed at your own risk.
 
 class RealmUI extends UI {
   constructor() {
