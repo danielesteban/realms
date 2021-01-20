@@ -257,6 +257,24 @@ body.pointerlock #discord {
   transform: translate(-50%, -50%);
 }
 
+.dialog .sharing {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.25rem 0;
+}
+
+.dialog .sharing > a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.dialog .sharing > a > svg {
+  margin-bottom: 0.25rem;
+}
+
 .dialog .submit {
   display: flex;
   justify-content: center;

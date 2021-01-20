@@ -566,7 +566,7 @@ class RealmUI extends UI {
 
     button('meta', 'menu', 'Browse realms', true);
     button('meta', 'fork', 'Make a copy');
-    button('meta', 'create', 'Create new');
+    button('meta', 'share', 'Share');
     button('meta', 'session', 'Sign-In');
 
     input('brush', 'brushColor', 'COLOR', 'color', 0xFFFFFF);

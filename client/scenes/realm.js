@@ -6,6 +6,7 @@ import {
 } from '../core/three.js';
 import Room from '../core/room.js';
 import RealmUI from '../renderables/realmUI.js';
+import Sharing from '../renderables/sharing.js';
 import Voxels from '../renderables/voxels.js';
 
 class Realm extends Group {
@@ -25,6 +26,7 @@ class Realm extends Group {
     this.pointables = world.pointables;
     this.router = world.router;
     this.server = server;
+    this.slug = slug;
 
     this.brush = {
       color: new Color(),
@@ -344,9 +346,9 @@ class Realm extends Group {
       player,
       router,
       server,
+      slug,
     } = this;
     switch (id) {
-      case 'create':
       case 'fork':
         if (!config) {
           return;
@@ -364,6 +366,10 @@ class Realm extends Group {
           player.unlock();
           server.showDialog('session');
         }
+        break;
+      case 'share':
+        player.unlock();
+        Sharing.showDialog(`${server.baseURL}/${slug}`);
         break;
       case 'menu':
         router.push('/');
