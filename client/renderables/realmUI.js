@@ -187,14 +187,14 @@ class RealmUI extends UI {
       add(tab, id, { info: { dom, canvas } }, { dom: w, labels: [canvas.label, canvas.value] });
     };
 
-    const button = (tab, id, label, isActive) => {
+    const button = (tab, id, label, options = {}) => {
       const onPointer = () => (
         this.dispatchEvent({ type: 'button', id })
       );
       const w = document.createElement('div');
       w.style.marginBottom = '0.25rem';
       const b = document.createElement('button');
-      if (isActive) {
+      if (options.isActive) {
         b.className = 'primary';
       }
       b.style.width = '100%';
@@ -202,14 +202,20 @@ class RealmUI extends UI {
       b.addEventListener('click', onPointer, false);
       w.appendChild(b);
       const dom = { wrappper: w, button: b };
-      const canvas = {
-        button: {
-          label,
-          isActive,
-          onPointer,
-        },
-      };
-      add(tab, id, { button: { dom, canvas } }, { dom: w, buttons: [canvas.button] });
+      let canvas = false;
+      if (!options.onlyDesktop) {
+        canvas = {
+          button: {
+            label,
+            isActive: options.isActive,
+            onPointer,
+          },
+        };
+      }
+      add(
+        tab, id, { button: { dom, canvas } },
+        !canvas ? { dom: w } : { dom: w, buttons: [canvas.button] }
+      );
     };
 
     const buttonGroup = (tab, id, label, buttons, value, options = {}) => {
@@ -248,12 +254,12 @@ class RealmUI extends UI {
         const onClick = () => {
           group.dom.forEach((b, i) => {
             b.className = '';
-            if (!options.noCanvas) {
+            if (!options.onlyDesktop) {
               group.canvas[i].isActive = false;
             }
           });
           button.className = 'primary';
-          if (!options.noCanvas) {
+          if (!options.onlyDesktop) {
             group.canvas[i].isActive = true;
             this.draw();
           }
@@ -262,7 +268,7 @@ class RealmUI extends UI {
           ));
         };
         button.addEventListener('click', onClick);
-        if (!options.noCanvas) {
+        if (!options.onlyDesktop) {
           group.canvas.push({
             label: label[label.length - 1],
             font: '700 10px monospace',
@@ -274,7 +280,7 @@ class RealmUI extends UI {
       w.appendChild(b);
       const dom = { wrapper: w, buttons: group.dom, label: l };
       let canvas = false;
-      if (!options.noCanvas) {
+      if (!options.onlyDesktop) {
         canvas = {
           buttons: group.canvas,
           label: {
@@ -335,7 +341,7 @@ class RealmUI extends UI {
         display: d,
       };
       let canvas = false;
-      if (!options.noCanvas) {
+      if (!options.onlyDesktop) {
         switch (type) {
           case 'color': {
             const graphic = ({ ctx }) => {
@@ -547,34 +553,23 @@ class RealmUI extends UI {
       );
     };
 
-    this.help = [];
-    const help = (text, onlyEdit) => {
-      const div = document.createElement('div');
-      div.style.display = onlyEdit ? 'none' : '';
-      div.style.marginBottom = '0.25rem';
-      div.style.color = '#999';
-      div.appendChild(document.createTextNode(text));
-      this.dom.appendChild(div);
-      div.onlyEdit = onlyEdit;
-      this.help.push(div);
-    };
-
-    input('meta', 'name', 'TITLE', 'text', '···', { hidden: true, noCanvas: true });
+    input('meta', 'name', 'TITLE', 'text', '···', { hidden: true, onlyDesktop: true });
     info('meta', 'name', 'TITLE', '···');
     info('meta', 'creator', 'CREATOR', '···');
 
-    button('meta', 'menu', 'Browse realms', true);
+    button('meta', 'menu', 'Browse realms', { isActive: true });
     button('meta', 'fork', 'Make a copy');
     button('meta', 'share', 'Share');
+    button('meta', 'download', 'Download', { onlyDesktop: true });
     button('meta', 'session', 'Sign-In');
 
     input('brush', 'brushColor', 'COLOR', 'color', 0xFFFFFF);
     input('brush', 'brushNoise', 'NOISE', 'range', 0.15, { min: 0, max: 1, step: 0.01 });
-    input('brush', 'brushSize', 'SIZE', 'range', 1, { min: 1, max: 4, step: 1, noCanvas: true });
+    input('brush', 'brushSize', 'SIZE', 'range', 1, { min: 1, max: 4, step: 1, onlyDesktop: true });
     buttonGroup('brush', 'brushShape', 'SHAPE', [
       { label: ['BOX'], key: 'box' },
       { label: ['SPHERE'], key: 'sphere' },
-    ], 'box', { noCanvas: true });
+    ], 'box', { onlyDesktop: true });
     buttonGroup('brush', 'blockType', 'TYPE', [
       { label: ['1', 'Block'], key: 0 },
       { label: ['2', 'Light1'], key: 1 },
@@ -592,14 +587,6 @@ class RealmUI extends UI {
 
     this.visualizer = new Visualizer();
     this.dom.appendChild(this.visualizer.renderer);
-
-    help('left click: place blocks', true);
-    help('right click: remove blocks', true);
-    help('middle click: pick block', true);
-    help('12345: set brush type', true);
-    help('wasd: move around');
-    help('spacebar: move up');
-    help('shift: move down');
 
     this.setTab('meta');
 
@@ -729,7 +716,6 @@ class RealmUI extends UI {
       map,
       tabs,
       tabButtons,
-      help,
     } = this;
     Object.keys(meta).forEach((key) => {
       const value = meta[key];
@@ -787,9 +773,6 @@ class RealmUI extends UI {
         });
         tabButtons.forEach((button) => {
           button.isDisabled = !value && editTabs.includes(button.tab);
-        });
-        help.forEach((div) => {
-          div.style.display = (!value && div.onlyEdit) || (value && !div.onlyEdit) ? 'none' : '';
         });
       }
       if (key === 'hasSession') {

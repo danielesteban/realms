@@ -3,7 +3,7 @@ class Visualizer {
     const renderer = document.createElement('canvas');
     renderer.style.marginBottom = '1.25rem';
     renderer.width = 200;
-    renderer.height = 50;
+    renderer.height = 64;
     this.bar = {
       y: renderer.height / Visualizer.steps,
     };

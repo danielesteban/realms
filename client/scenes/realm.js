@@ -4,6 +4,7 @@ import {
   Group,
   Vector3,
 } from '../core/three.js';
+import Exporter from '../core/exporter.js';
 import Room from '../core/room.js';
 import RealmUI from '../renderables/realmUI.js';
 import Sharing from '../renderables/sharing.js';
@@ -37,6 +38,7 @@ class Realm extends Group {
     };
 
     this.chunks = [];
+    this.exporter = new Exporter();
     this.worker = new Worker('./core/worker/main.js', { type: 'module' });
     this.worker.addEventListener('message', this.onWorkerMessage.bind(this));
 
@@ -345,19 +347,29 @@ class Realm extends Group {
 
   onUIButton({ id }) {
     const {
+      chunks,
       config,
+      exporter,
       player,
       router,
       server,
       slug,
     } = this;
     switch (id) {
+      case 'download':
+        exporter.download({
+          config,
+          chunks,
+          instances: 6,
+          scale: Voxels.scale,
+        });
+        break;
       case 'fork':
         if (!config) {
           return;
         }
         server.request({
-          endpoint: id === 'fork' ? `realm/${config._id}/fork` : 'realm',
+          endpoint: `realm/${config._id}/fork`,
           method: 'POST',
         })
           .then((slug) => router.push(`/${slug}`));
@@ -417,6 +429,9 @@ class Realm extends Group {
       case 'blockType':
         brush.type = value;
         break;
+      case 'name':
+        config.name = value;
+        break;
       default:
         if (Object.keys(config.lighting).includes(id)) {
           config.lighting[id] = value;
@@ -428,11 +443,13 @@ class Realm extends Group {
   onUnload() {
     const {
       chunks,
+      exporter,
       room,
       worker,
       ui,
     } = this;
     chunks.forEach((chunk) => chunk.dispose());
+    exporter.dispose();
     room.disconnect();
     worker.terminate();
     ui.dispose();
