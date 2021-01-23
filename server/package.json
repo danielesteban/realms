@@ -8,7 +8,8 @@
     "cert": "openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj /CN=localhost -keyout localhost-key.pem -out localhost-cert.pem",
     "protocol": "pbjs -t static-module -w es6 -o ../client/core/protocol.js --no-comments messages.proto",
     "postinstall": "npm run cert",
-    "start": "cross-env TLS_CERT=localhost-cert.pem TLS_KEY=localhost-key.pem node main.js"
+    "start": "cross-env TLS_CERT=localhost-cert.pem TLS_KEY=localhost-key.pem node main.js",
+    "test": "mocha --colors --exit --slow 500"
   },
   "dependencies": {
     "@hapi/boom": "^9.1.1",
@@ -36,5 +37,9 @@
     "protobufjs": "^6.10.2",
     "puppeteer": "^5.5.0",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.1",
+    "supertest": "^6.1.1"
   }
 }
