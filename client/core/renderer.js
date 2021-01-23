@@ -59,8 +59,7 @@ class Renderer {
       navigator.xr.isSessionSupported('immersive-vr')
         .then((supported) => {
           if (supported) {
-            dom.enterVR.style.display = '';
-            dom.renderer.addEventListener('mousedown', () => {
+            dom.enterVR.addEventListener('mousedown', () => {
               if (xr.isPresenting) return;
               navigator.xr.requestSession('immersive-vr', {
                 optionalFeatures: ['local-floor', 'bounded-floor'],
@@ -76,6 +75,7 @@ class Renderer {
                 })
                 .catch(() => {});
             }, false);
+            dom.enterVR.style.display = '';
           }
         });
     }
