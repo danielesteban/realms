@@ -38,6 +38,7 @@ class DesktopControls {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
     this.onPointerLock = this.onPointerLock.bind(this);
     this.requestPointerLock = this.requestPointerLock.bind(this);
     window.addEventListener('blur', this.onBlur, false);
@@ -46,6 +47,7 @@ class DesktopControls {
     document.addEventListener('mousedown', this.onMouseDown, false);
     document.addEventListener('mousemove', this.onMouseMove, false);
     document.addEventListener('mouseup', this.onMouseUp, false);
+    document.addEventListener('wheel', this.onMouseWheel, false);
     document.addEventListener('pointerlockchange', this.onPointerLock, false);
     renderer.addEventListener('mousedown', this.requestPointerLock, false);
   }
@@ -58,6 +60,7 @@ class DesktopControls {
     document.removeEventListener('keyup', this.onKeyUp);
     renderer.removeEventListener('mousedown', this.onMouseDown);
     document.removeEventListener('mousemove', this.onMouseMove);
+    document.removeEventListener('wheel', this.onMouseWheel);
     document.removeEventListener('pointerlockchange', this.onPointerLock);
     if (isLocked) {
       document.exitPointerLock();
@@ -227,6 +230,22 @@ class DesktopControls {
     }
   }
 
+  onMouseWheel({ deltaY }) {
+    const { speed, isLocked } = this;
+    if (!isLocked) {
+      return;
+    }
+    const { minSpeed, speedRange } = DesktopControls;
+    const logSpeed = Math.min(
+      Math.max(
+        ((Math.log(speed) - minSpeed) / speedRange) - (-deltaY * 0.0003),
+        0
+      ),
+      1
+    );
+    this.speed = Math.exp(minSpeed + logSpeed * speedRange);
+  }
+
   onPointerLock() {
     this.isLocked = !!document.pointerLockElement;
     document.body.classList[this.isLocked ? 'add' : 'remove']('pointerlock');
@@ -248,5 +267,9 @@ class DesktopControls {
     this.speed = 6;
   }
 }
+
+DesktopControls.minSpeed = Math.log(2);
+DesktopControls.maxSpeed = Math.log(32);
+DesktopControls.speedRange = DesktopControls.maxSpeed - DesktopControls.minSpeed;
 
 export default DesktopControls;
