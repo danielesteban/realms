@@ -477,6 +477,9 @@ class Realm extends Group {
 
   playSound({ filter, position }) {
     const { sounds } = this;
+    if (!sounds) {
+      return;
+    }
     const sound = sounds.find(({ isPlaying }) => (!isPlaying));
     if (sound && sound.context.state === 'running') {
       sound.filter.type = filter;
