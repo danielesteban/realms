@@ -14,7 +14,7 @@ class Realm extends Group {
   constructor(world, { slug }) {
     super();
 
-    const { player, server } = world;
+    const { player, server, sfx } = world;
 
     world.background = new Color(0);
     world.fog = new FogExp2(0, navigator.userAgent.includes('Mobile') ? 0.03 : 0.02);
@@ -51,6 +51,20 @@ class Realm extends Group {
       server,
     });
     this.add(this.room);
+
+    Promise.all([...Array(10)].map(() => (
+      sfx.load('./sounds/plop.ogg')
+        .then((sound) => {
+          sound.filter = sound.context.createBiquadFilter();
+          sound.setFilter(sound.filter);
+          sound.setRefDistance(3);
+          this.add(sound);
+          return sound;
+        })
+    )))
+      .then((sounds) => {
+        this.sounds = sounds;
+      });
 
     this.ui = new RealmUI();
     this.ui.addEventListener('button', this.onUIButton.bind(this));
@@ -152,6 +166,12 @@ class Realm extends Group {
           }
           const isPlacing = isDesktop ? buttons.primaryDown : buttons.triggerDown;
           const isPicking = isDesktop ? buttons.tertiaryDown : buttons.primaryDown;
+          if (!isPicking) {
+            this.playSound({
+              filter: isPlacing ? 'lowpass' : 'highpass',
+              position: hit.point,
+            });
+          }
           hit.point
             .divideScalar(Voxels.scale)
             .addScaledVector(hit.face.normal, isPlacing ? 0.25 : -0.25)
@@ -453,6 +473,17 @@ class Realm extends Group {
     room.disconnect();
     worker.terminate();
     ui.dispose();
+  }
+
+  playSound({ filter, position }) {
+    const { sounds } = this;
+    const sound = sounds.find(({ isPlaying }) => (!isPlaying));
+    if (sound && sound.context.state === 'running') {
+      sound.filter.type = filter;
+      sound.filter.frequency.value = (Math.random() + 0.5) * 1000;
+      sound.position.copy(position);
+      sound.play();
+    }
   }
 
   requestEdit() {
