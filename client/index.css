@@ -137,6 +137,10 @@ body.pointerlock #discord {
   text-indent: -999999px;
 }
 
+body.pointerlock #ribbon {
+  display: none;
+}
+
 #ribbon:hover, #ribbon:active {
   background-color: rgba(0, 0, 0, 0.0);
 }
