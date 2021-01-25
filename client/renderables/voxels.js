@@ -117,7 +117,7 @@ class Voxels extends Mesh {
 
   static updateIntersects(boxes) {
     const { vector } = Voxels.aux;
-    const model = new BoxBufferGeometry(1, 1, 1);
+    const model = (new BoxBufferGeometry(1, 1, 1)).toNonIndexed();
     model.deleteAttribute('normal');
     model.deleteAttribute('uv');
     const geometry = BufferGeometryUtils.mergeBufferGeometries(
@@ -137,6 +137,7 @@ class Voxels extends Mesh {
       })
     );
     geometry.computeBoundingSphere();
+    geometry.computeBoundingBox();
     Voxels.intersects.forEach((intersect) => {
       intersect.geometry = geometry;
     });
