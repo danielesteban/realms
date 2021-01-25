@@ -137,7 +137,6 @@ class Voxels extends Mesh {
       })
     );
     geometry.computeBoundingSphere();
-    geometry.computeBoundingBox();
     Voxels.intersects.forEach((intersect) => {
       intersect.geometry = geometry;
     });
